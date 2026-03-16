@@ -1,0 +1,15 @@
+{
+  "name": "shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/types.ts",
+      "types": "./src/types.ts"
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

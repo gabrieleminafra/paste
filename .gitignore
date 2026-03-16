@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+*.tsbuildinfo
+
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
