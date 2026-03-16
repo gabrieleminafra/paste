@@ -44,9 +44,9 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # Epic 1: Paste Creation & Sharing
   epic-1: in-progress
-  1-1-project-foundation-and-paste-storage: review
-  1-2-paste-creation-flow: ready-for-dev
-  1-3-paste-viewing-and-sharing: backlog
+  1-1-project-foundation-and-paste-storage: done
+  1-2-paste-creation-flow: review
+  1-3-paste-viewing-and-sharing: ready-for-dev
   epic-1-retrospective: optional
 
   # Epic 2: Real-Time Collaborative Editing

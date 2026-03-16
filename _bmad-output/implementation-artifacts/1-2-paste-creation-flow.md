@@ -1,6 +1,6 @@
 # Story 1.2: Paste Creation Flow
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -41,48 +41,48 @@ So that I can quickly save and share text snippets.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install dependencies and set up Tailwind CSS v4.2 (AC: #4)
-  - [ ] Install `tailwindcss` (4.2.x) and `@tailwindcss/vite` in `packages/client`
-  - [ ] Install `react-router` (7.x) in `packages/client`
-  - [ ] Install `nanoid` (5.x) in `packages/server`
-  - [ ] Add `@tailwindcss/vite` plugin to `packages/client/vite.config.ts`
-  - [ ] Replace CSS content in `packages/client/src/index.css` with `@import "tailwindcss";` and custom design tokens via `@theme`
-  - [ ] Remove the existing Vite boilerplate CSS in `App.css`
+- [x] Task 1: Install dependencies and set up Tailwind CSS v4.2 (AC: #4)
+  - [x] Install `tailwindcss` (4.2.x) and `@tailwindcss/vite` in `packages/client`
+  - [x] Install `react-router` (7.x) in `packages/client`
+  - [x] Install `nanoid` (5.x) in `packages/server`
+  - [x] Add `@tailwindcss/vite` plugin to `packages/client/vite.config.ts`
+  - [x] Replace CSS content in `packages/client/src/index.css` with `@import "tailwindcss";` and custom design tokens via `@theme`
+  - [x] Remove the existing Vite boilerplate CSS in `App.css`
 
-- [ ] Task 2: Set up client-side routing with React Router 7 (AC: #3)
-  - [ ] Configure `BrowserRouter` in `packages/client/src/main.tsx`
-  - [ ] Update `packages/client/src/App.tsx` to define routes: `/` → `CreatePage`, `/:pasteId` → `PastePage`
-  - [ ] Create `packages/client/src/pages/CreatePage.tsx` (stub)
-  - [ ] Create `packages/client/src/pages/PastePage.tsx` (stub — displays paste content read-only for now)
+- [x] Task 2: Set up client-side routing with React Router 7 (AC: #3)
+  - [x] Configure `BrowserRouter` in `packages/client/src/main.tsx`
+  - [x] Update `packages/client/src/App.tsx` to define routes: `/` → `CreatePage`, `/:pasteId` → `PastePage`
+  - [x] Create `packages/client/src/pages/CreatePage.tsx` (stub)
+  - [x] Create `packages/client/src/pages/PastePage.tsx` (stub — displays paste content read-only for now)
 
-- [ ] Task 3: Build CreatePage with editor and CreateButton (AC: #1, #4)
-  - [ ] Create `packages/client/src/pages/CreatePage.tsx` with full-width textarea, placeholder "Paste your text here...", monospace font
-  - [ ] Create `packages/client/src/components/CreateButton.tsx` — "Create" label, disabled when empty, styled per UX-DR3
-  - [ ] Implement Cmd/Ctrl+Enter keyboard shortcut to trigger create (UX-DR11)
-  - [ ] Apply Tailwind design tokens: background #FFFFFF, text #1A1A1A, button primary #2563EB, muted #6B7280
-  - [ ] Center editor with max-width 800px on desktop (UX-DR9)
+- [x] Task 3: Build CreatePage with editor and CreateButton (AC: #1, #4)
+  - [x] Create `packages/client/src/pages/CreatePage.tsx` with full-width textarea, placeholder "Paste your text here...", monospace font
+  - [x] Create `packages/client/src/components/CreateButton.tsx` — "Create" label, disabled when empty, styled per UX-DR3
+  - [x] Implement Cmd/Ctrl+Enter keyboard shortcut to trigger create (UX-DR11)
+  - [x] Apply Tailwind design tokens: background #FFFFFF, text #1A1A1A, button primary #2563EB, muted #6B7280
+  - [x] Center editor with max-width 800px on desktop (UX-DR9)
 
-- [ ] Task 4: Build paste creation API route (AC: #2, #5)
-  - [ ] Create `packages/server/src/routes/pastes.ts` with `POST /api/pastes` and `GET /api/pastes/:id`
-  - [ ] `POST /api/pastes`: validate content exists and is <= 1MB, generate nanoid (21 chars), encode text to Buffer, insert into `pastes` table, return `{ data: { id }, error: null }` with 201
-  - [ ] `GET /api/pastes/:id`: query `pastes` table by ID, decode bytea content to text string via `Buffer.from(content).toString('utf-8')`, return in `ApiResponse<T>` envelope with 200, or 404 if not found
-  - [ ] Register routes in `packages/server/src/app.ts`
-  - [ ] Enable `@fastify/rate-limit` on `POST /api/pastes` route
+- [x] Task 4: Build paste creation API route (AC: #2, #5)
+  - [x] Create `packages/server/src/routes/pastes.ts` with `POST /api/pastes` and `GET /api/pastes/:id`
+  - [x] `POST /api/pastes`: validate content exists and is <= 1MB, generate nanoid (21 chars), encode text to Buffer, insert into `pastes` table, return `{ data: { id }, error: null }` with 201
+  - [x] `GET /api/pastes/:id`: query `pastes` table by ID, decode bytea content to text string via `Buffer.from(content).toString('utf-8')`, return in `ApiResponse<T>` envelope with 200, or 404 if not found
+  - [x] Register routes in `packages/server/src/app.ts`
+  - [x] Enable `@fastify/rate-limit` on `POST /api/pastes` route
 
-- [ ] Task 5: Build PastePage for viewing (AC: #3)
-  - [ ] Create `packages/client/src/pages/PastePage.tsx` — fetch paste via `GET /api/pastes/:pasteId`, display content in read-only textarea with same monospace font
-  - [ ] Show loading skeleton/shimmer while fetching (no full-page spinner per UX-DR12)
-  - [ ] Show "Paste not found" with link to create a new paste on 404
+- [x] Task 5: Build PastePage for viewing (AC: #3)
+  - [x] Create `packages/client/src/pages/PastePage.tsx` — fetch paste via `GET /api/pastes/:pasteId`, display content in read-only textarea with same monospace font
+  - [x] Show loading skeleton/shimmer while fetching (no full-page spinner per UX-DR12)
+  - [x] Show "Paste not found" with link to create a new paste on 404
 
-- [ ] Task 6: Wire up paste creation flow end-to-end (AC: #2, #3)
-  - [ ] CreatePage calls `POST /api/pastes` with textarea content on create
-  - [ ] On success, use React Router `useNavigate()` to navigate to `/:pasteId` (client-side navigation, no full page reload)
-  - [ ] Handle creation errors: show "Retry" button with muted error message (UX-DR12)
+- [x] Task 6: Wire up paste creation flow end-to-end (AC: #2, #3)
+  - [x] CreatePage calls `POST /api/pastes` with textarea content on create
+  - [x] On success, use React Router `useNavigate()` to navigate to `/:pasteId` (client-side navigation, no full page reload)
+  - [x] Handle creation errors: show "Retry" button with muted error message (UX-DR12)
 
-- [ ] Task 7: Add tests (AC: all)
-  - [ ] Create `packages/server/src/routes/pastes.test.ts` — test POST creates paste, GET retrieves it, 404 for unknown ID, 429 for rate limit, validation errors for empty/oversized content
-  - [ ] Create `packages/client/src/pages/CreatePage.test.tsx` — test textarea renders, button disabled when empty, enabled when text entered
-  - [ ] Create `packages/client/src/components/CreateButton.test.tsx` — test disabled/enabled states, click handler
+- [x] Task 7: Add tests (AC: all)
+  - [x] Create `packages/server/src/routes/pastes.test.ts` — test POST creates paste, GET retrieves it, 404 for unknown ID, 429 for rate limit, validation errors for empty/oversized content
+  - [x] Create `packages/client/src/pages/CreatePage.test.tsx` — test textarea renders, button disabled when empty, enabled when text entered
+  - [x] Create `packages/client/src/components/CreateButton.test.tsx` — test disabled/enabled states, click handler
 
 ## Dev Notes
 
@@ -305,10 +305,50 @@ packages/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
+- Fixed @tailwindcss/vite peer dependency conflict with Vite 8 — used --legacy-peer-deps
+- Fixed Fastify default body limit (1MB) returning 413 before custom validation — increased bodyLimit to 2MB on POST route
+- Configured vitest workspace with jsdom environment for React component tests using inline pragmas
+
 ### Completion Notes List
 
+- Installed tailwindcss 4.2, @tailwindcss/vite 4.2, react-router 7, nanoid 5
+- Configured Tailwind CSS v4.2 with Vite plugin and CSS-based @theme design tokens
+- Set up React Router 7 with BrowserRouter, Routes for / and /:pasteId
+- Built CreatePage with textarea, CreateButton (disabled when empty), Cmd/Ctrl+Enter shortcut, error handling with Retry
+- Built paste API routes: POST /api/pastes (create with nanoid, validation, rate limiting), GET /api/pastes/:id (retrieve with bytea decode)
+- Registered @fastify/rate-limit globally and per-route config on POST (10 req/min)
+- Built PastePage with fetch, loading skeleton, 404 handling with link to create new paste
+- All responses use ApiResponse<T> envelope from shared package
+- 29 tests pass: 7 server route tests, 6 CreateButton tests, 7 CreatePage tests, 5 shared type tests, 3 app tests, 1 health test
+
+### Change Log
+
+- 2026-03-16: Implemented Story 1.2 — Paste Creation Flow (all 7 tasks completed, 29 tests passing)
+
 ### File List
+
+**New files:**
+- packages/client/src/pages/CreatePage.tsx
+- packages/client/src/pages/CreatePage.test.tsx
+- packages/client/src/pages/PastePage.tsx
+- packages/client/src/components/CreateButton.tsx
+- packages/client/src/components/CreateButton.test.tsx
+- packages/client/src/test-setup.ts
+- packages/client/vitest.config.ts
+- packages/server/src/routes/pastes.ts
+- packages/server/src/routes/pastes.test.ts
+- vitest.workspace.ts
+
+**Modified files:**
+- packages/client/vite.config.ts (added @tailwindcss/vite plugin)
+- packages/client/src/main.tsx (wrapped with BrowserRouter)
+- packages/client/src/App.tsx (replaced boilerplate with React Router routes)
+- packages/client/src/index.css (replaced with Tailwind import + design tokens)
+- packages/client/src/App.css (cleared boilerplate styles)
+- packages/client/package.json (added tailwindcss, @tailwindcss/vite, react-router, test deps)
+- packages/server/src/app.ts (registered rate-limit plugin and paste routes)
+- packages/server/package.json (added nanoid)

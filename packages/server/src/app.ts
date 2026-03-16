@@ -1,8 +1,10 @@
 import Fastify, { type FastifyError } from "fastify";
 import fastifyEnv from "@fastify/env";
+import rateLimit from "@fastify/rate-limit";
 import type { ApiResponse, ErrorCode } from "shared";
 import { envSchema } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
+import { pasteRoutes } from "./routes/pastes.js";
 
 function errorCodeFromStatus(statusCode: number): ErrorCode {
   if (statusCode === 404) return "NOT_FOUND";
@@ -17,8 +19,10 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   });
 
   await app.register(fastifyEnv, envSchema);
+  await app.register(rateLimit);
 
   app.register(healthRoutes);
+  app.register(pasteRoutes);
 
   app.setNotFoundHandler((_request, reply) => {
     const response: ApiResponse<never> = {
