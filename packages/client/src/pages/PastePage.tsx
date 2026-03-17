@@ -1,11 +1,22 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import PageHeader from '../components/PageHeader'
 import PasteEditor from '../components/PasteEditor'
+import ConnectionStatus from '../components/ConnectionStatus'
 import { useCollaboration } from '../hooks/useCollaboration'
 
 export default function PastePage() {
   const { pasteId } = useParams<{ pasteId: string }>()
   const { ytext, awareness, connectionStatus, undoManager } = useCollaboration(pasteId!)
+  const [showReconnectMsg, setShowReconnectMsg] = useState(false)
+
+  useEffect(() => {
+    if (connectionStatus === 'reconnecting') {
+      const timer = setTimeout(() => setShowReconnectMsg(true), 30000)
+      return () => clearTimeout(timer)
+    }
+    setShowReconnectMsg(false)
+  }, [connectionStatus])
 
   if (connectionStatus === 'connecting') {
     return (
@@ -42,11 +53,15 @@ export default function PastePage() {
   return (
     <div className="min-h-screen">
       <PageHeader />
+      {showReconnectMsg && (
+        <div className="text-center text-sm text-muted py-2">Reconnecting...</div>
+      )}
       <main id="main-content" className="flex items-start justify-center pt-12 px-4">
         <div className="w-full max-w-[800px]">
           <PasteEditor ytext={ytext} awareness={awareness} undoManager={undoManager} />
         </div>
       </main>
+      <ConnectionStatus status={connectionStatus} />
     </div>
   )
 }

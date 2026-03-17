@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
 // Mock useCollaboration hook
@@ -13,6 +13,15 @@ vi.mock('../hooks/useCollaboration', () => ({
 // Mock PasteEditor
 vi.mock('../components/PasteEditor', () => ({
   default: () => <div data-testid="paste-editor">Mock PasteEditor</div>,
+}))
+
+// Mock ConnectionStatus
+const mockConnectionStatusComponent = vi.fn()
+vi.mock('../components/ConnectionStatus', () => ({
+  default: (props: { status: string }) => {
+    mockConnectionStatusComponent(props)
+    return <div data-testid="connection-status" data-status={props.status}>ConnectionStatus</div>
+  },
 }))
 
 import PastePage from './PastePage'
@@ -41,6 +50,7 @@ describe('PastePage', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    mockConnectionStatusComponent.mockClear()
     Object.defineProperty(navigator, 'clipboard', {
       value: originalClipboard,
       writable: true,
@@ -212,5 +222,137 @@ describe('PastePage', () => {
     renderWithRoute('my-paste-id')
 
     expect(mockUseCollaboration).toHaveBeenCalledWith('my-paste-id')
+  })
+
+  it('renders ConnectionStatus with correct status when connected', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connected',
+      connectedUsers: 1,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    const cs = screen.getByTestId('connection-status')
+    expect(cs).toBeInTheDocument()
+    expect(cs).toHaveAttribute('data-status', 'connected')
+  })
+
+  it('renders ConnectionStatus when reconnecting', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'reconnecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    const cs = screen.getByTestId('connection-status')
+    expect(cs).toBeInTheDocument()
+    expect(cs).toHaveAttribute('data-status', 'reconnecting')
+  })
+
+  it('does NOT render ConnectionStatus during initial connecting state', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    expect(screen.queryByTestId('connection-status')).not.toBeInTheDocument()
+  })
+
+  it('does NOT render ConnectionStatus for not-found state', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'not-found',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    expect(screen.queryByTestId('connection-status')).not.toBeInTheDocument()
+  })
+
+  it('shows "Reconnecting..." message after 30s in reconnecting state', () => {
+    vi.useFakeTimers()
+
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'reconnecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    // Not visible yet
+    expect(screen.queryByText('Reconnecting...')).not.toBeInTheDocument()
+
+    // Advance 30 seconds
+    act(() => {
+      vi.advanceTimersByTime(30000)
+    })
+
+    expect(screen.getByText('Reconnecting...')).toBeInTheDocument()
+
+    vi.useRealTimers()
+  })
+
+  it('hides "Reconnecting..." message when status returns to connected', () => {
+    vi.useFakeTimers()
+
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'reconnecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    const { rerender } = render(
+      <MemoryRouter initialEntries={['/abc123']}>
+        <Routes>
+          <Route path="/:pasteId" element={<PastePage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(30000)
+    })
+    expect(screen.getByText('Reconnecting...')).toBeInTheDocument()
+
+    // Reconnect
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connected',
+      connectedUsers: 1,
+      undoManager: {},
+    })
+
+    rerender(
+      <MemoryRouter initialEntries={['/abc123']}>
+        <Routes>
+          <Route path="/:pasteId" element={<PastePage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Reconnecting...')).not.toBeInTheDocument()
+
+    vi.useRealTimers()
   })
 })

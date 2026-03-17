@@ -194,6 +194,38 @@ describe("DocumentManager", () => {
     expect(connections!.size).toBe(1);
   });
 
+  it("persists to PostgreSQL and cleans in-memory doc when last connection closes", async () => {
+    const sourceDoc = new Y.Doc();
+    sourceDoc.getText("content").insert(0, "persist on disconnect");
+    const encoded = Y.encodeStateAsUpdate(sourceDoc);
+    sourceDoc.destroy();
+
+    const dbWithDoc = createMockDb([{ id: "paste-last", content: encoded }]);
+    const mgr = new DocumentManager(dbWithDoc as never);
+    const { doc } = await mgr.getOrCreateDoc("paste-last");
+
+    const ws1 = {} as WebSocket;
+    const ws2 = {} as WebSocket;
+    mgr.addConnection("paste-last", ws1);
+    mgr.addConnection("paste-last", ws2);
+
+    // Make an edit
+    doc.getText("content").insert(0, "new ");
+
+    // Remove first connection — should NOT persist/cleanup yet
+    mgr.removeConnection("paste-last", ws1);
+    await vi.advanceTimersByTimeAsync(0);
+    expect((dbWithDoc as any).update).not.toHaveBeenCalled();
+    expect(mgr.getConnections("paste-last")).toBeDefined();
+
+    // Remove last connection — should persist and cleanup
+    mgr.removeConnection("paste-last", ws2);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect((dbWithDoc as any).update).toHaveBeenCalled();
+    expect(mgr.getConnections("paste-last")).toBeUndefined();
+  });
+
   it("loads doc from DB after cache is cleared (simulates server restart)", async () => {
     // Create a doc with content and encode it
     const sourceDoc = new Y.Doc();

@@ -50,7 +50,7 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Real-Time Collaborative Editing
-  epic-2: in-progress
+  epic-2: done
   2-1-real-time-document-sync-with-yjs-and-websocket: done
   2-2-concurrent-multi-user-editing: done
   2-3-collaborator-cursor-presence: done
@@ -59,12 +59,12 @@ development_status:
   # Epic 3: Connection Resilience & Reliability
   epic-3: in-progress
   3-1-auto-reconnection-and-state-synchronization: done
-  3-2-graceful-disconnection-and-connection-status: backlog
+  3-2-graceful-disconnection-and-connection-status: done
   epic-3-retrospective: optional
 
   # Epic 4: UX Polish & Accessibility
-  epic-4: backlog
-  4-1-responsive-layout: backlog
+  epic-4: in-progress
+  4-1-responsive-layout: ready-for-dev
   4-2-accessibility-and-keyboard-shortcuts: backlog
   4-3-loading-states-and-production-build: backlog
   epic-4-retrospective: optional

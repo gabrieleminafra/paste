@@ -347,6 +347,78 @@ describe("yjs-handler", () => {
     wsB.terminate();
   });
 
+  it("cleans up awareness state on disconnect so new clients do not see stale presence", async () => {
+    app = await buildApp({ logger: false });
+    const pasteId = await createPaste("awareness cleanup broadcast test");
+
+    // Client A connects and sends awareness update
+    const collectorA = createMessageCollector();
+    const wsA = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorA.onMessage); },
+    });
+    await drainInitialMessages(collectorA);
+
+    const awarenessDoc = new Y.Doc();
+    const awareness = new awarenessProtocol.Awareness(awarenessDoc);
+    awareness.setLocalStateField("user", { color: "#8B5CF6", name: "User A" });
+
+    const awarenessUpdate = awarenessProtocol.encodeAwarenessUpdate(
+      awareness,
+      [awarenessDoc.clientID],
+    );
+
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
+    encoding.writeVarUint8Array(encoder, awarenessUpdate);
+    wsA.send(encoding.toUint8Array(encoder));
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Client A disconnects — server removes awareness state
+    wsA.terminate();
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Client B connects — should NOT receive stale awareness from disconnected A
+    const collectorB = createMessageCollector();
+    const wsB = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorB.onMessage); },
+    });
+
+    // Drain sync messages
+    const syncMsg1 = await collectorB.nextMessage();
+    expect(decoding.readVarUint(decoding.createDecoder(new Uint8Array(syncMsg1)))).toBe(MESSAGE_SYNC);
+    const syncMsg2 = await collectorB.nextMessage();
+    expect(decoding.readVarUint(decoding.createDecoder(new Uint8Array(syncMsg2)))).toBe(MESSAGE_SYNC);
+
+    // The awareness message should have no client states (A's was cleaned up)
+    const awarenessMsg = await collectorB.nextMessage();
+    const awarenessDecoder = decoding.createDecoder(new Uint8Array(awarenessMsg));
+    expect(decoding.readVarUint(awarenessDecoder)).toBe(MESSAGE_AWARENESS);
+    const awarenessData = decoding.readVarUint8Array(awarenessDecoder);
+
+    // Apply to a fresh awareness instance and verify no stale states
+    const clientDoc = new Y.Doc();
+    const clientAwareness = new awarenessProtocol.Awareness(clientDoc);
+    awarenessProtocol.applyAwarenessUpdate(clientAwareness, awarenessData, null);
+
+    // No stale User A presence should exist
+    const states = clientAwareness.getStates();
+    for (const [, state] of states) {
+      expect(state.user?.name).not.toBe("User A");
+    }
+    // Verify no unexpected client states were received (only the local client's empty state)
+    const nonLocalStates = Array.from(states.entries()).filter(
+      ([id]) => id !== clientDoc.clientID,
+    );
+    expect(nonLocalStates).toHaveLength(0);
+
+    awareness.destroy();
+    awarenessDoc.destroy();
+    clientAwareness.destroy();
+    clientDoc.destroy();
+    wsB.terminate();
+  });
+
   it("client reconnects after server restart and receives persisted state", async () => {
     app = await buildApp({ logger: false });
     const pasteId = await createPaste("restart test");
