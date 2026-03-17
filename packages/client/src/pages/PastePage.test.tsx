@@ -152,6 +152,24 @@ describe('PastePage', () => {
     )
   })
 
+  it('shows no collaboration artifacts when only 1 user is connected', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connected',
+      connectedUsers: 1,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    // Editor should render but no cursor-related collaboration UI should appear
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+    // No cursor indicator or presence UI elements in the page
+    expect(screen.queryByTestId('cursor-indicator')).toBeNull()
+    expect(screen.queryByTestId('presence-sidebar')).toBeNull()
+  })
+
   it('calls useCollaboration with the pasteId from route params', () => {
     mockUseCollaboration.mockReturnValue({
       ytext: {},

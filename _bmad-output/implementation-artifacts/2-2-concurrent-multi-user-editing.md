@@ -1,6 +1,6 @@
 # Story 2.2: Concurrent Multi-User Editing
 
-Status: review
+Status: done
 
 ## Story
 

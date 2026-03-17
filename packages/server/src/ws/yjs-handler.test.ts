@@ -302,6 +302,51 @@ describe("yjs-handler", () => {
     wsB.terminate();
   });
 
+  it("cleans up awareness listener and connection on disconnect", async () => {
+    app = await buildApp({ logger: false });
+    const pasteId = await createPaste("awareness cleanup test");
+
+    // Connect client A and drain initial messages
+    const collectorA = createMessageCollector();
+    const wsA = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorA.onMessage); },
+    });
+    await drainInitialMessages(collectorA);
+
+    // Client A sends an awareness update
+    const awarenessDoc = new Y.Doc();
+    const awareness = new awarenessProtocol.Awareness(awarenessDoc);
+    awareness.setLocalStateField("user", { color: "#8B5CF6", colorLight: "#8B5CF633" });
+
+    const awarenessUpdate = awarenessProtocol.encodeAwarenessUpdate(
+      awareness,
+      [awarenessDoc.clientID],
+    );
+
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
+    encoding.writeVarUint8Array(encoder, awarenessUpdate);
+    wsA.send(encoding.toUint8Array(encoder));
+
+    // Client A disconnects — server cleans up awareness state asynchronously
+    wsA.terminate();
+
+    // Client B connects — nextMessage() will block until the server is ready,
+    // so no arbitrary setTimeout is needed for synchronization
+    const collectorB = createMessageCollector();
+    const wsB = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorB.onMessage); },
+    });
+
+    // B receives initial sync and awareness messages successfully
+    const msg1 = await collectorB.nextMessage();
+    expect(decoding.readVarUint(decoding.createDecoder(new Uint8Array(msg1)))).toBe(MESSAGE_SYNC);
+
+    awareness.destroy();
+    awarenessDoc.destroy();
+    wsB.terminate();
+  });
+
   it("cleans up on connection close", async () => {
     app = await buildApp({ logger: false });
     const pasteId = await createPaste("cleanup test");

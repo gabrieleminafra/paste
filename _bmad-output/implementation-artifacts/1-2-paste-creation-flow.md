@@ -1,6 +1,6 @@
 # Story 1.2: Paste Creation Flow
 
-Status: review
+Status: done
 
 ## Story
 

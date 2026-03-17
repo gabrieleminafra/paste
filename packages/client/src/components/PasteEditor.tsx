@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { EditorView, basicSetup } from 'codemirror'
 import { EditorState } from '@codemirror/state'
 import { yCollab } from 'y-codemirror.next'
+import { cursorIndicatorTheme, cursorReducedMotionTheme } from './CursorIndicator'
 import type { Text as YText } from 'yjs'
 import type { UndoManager } from 'yjs'
 import type { Awareness } from 'y-protocols/awareness'
@@ -18,11 +19,15 @@ export default function PasteEditor({ ytext, awareness, undoManager }: PasteEdit
   useEffect(() => {
     if (!editorRef.current) return
 
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
     const state = EditorState.create({
       doc: ytext.toString(),
       extensions: [
         basicSetup,
         yCollab(ytext, awareness, { undoManager }),
+        cursorIndicatorTheme,
+        ...(reducedMotion ? [cursorReducedMotionTheme] : []),
         EditorView.theme({
           '&': { height: '100%' },
           '.cm-editor': { height: '100%' },

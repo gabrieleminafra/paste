@@ -44,9 +44,11 @@ export function useCollaboration(pasteId: string): CollaborationState {
       setConnectionStatus(status as ConnectionStatus)
       if (status === 'connected') {
         const colorIndex = doc.clientID % CURSOR_COLORS.length
+        const isSecondCycle = Math.floor((doc.clientID % 10) / CURSOR_COLORS.length) > 0
+        const baseColor = CURSOR_COLORS[colorIndex]
         awareness.setLocalStateField('user', {
-          color: CURSOR_COLORS[colorIndex],
-          colorLight: CURSOR_COLORS[colorIndex] + '33',
+          color: isSecondCycle ? baseColor + '80' : baseColor,
+          colorLight: isSecondCycle ? baseColor + '1A' : baseColor + '33',
         })
       }
     })

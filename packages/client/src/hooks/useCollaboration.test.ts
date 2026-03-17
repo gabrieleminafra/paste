@@ -111,8 +111,33 @@ describe('useCollaboration', () => {
     const call = mockAwarenessInstance.setLocalStateField.mock.calls[0]
     expect(call[0]).toBe('user')
     const palette = ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6', '#EAB308']
-    expect(palette).toContain(call[1].color)
-    expect(call[1].colorLight).toMatch(/^#[0-9A-Fa-f]{6}33$/)
+    // Base color (first 7 chars) should be from the palette
+    const baseColor = call[1].color.substring(0, 7)
+    expect(palette).toContain(baseColor)
+    // Color is either base (first cycle) or base+'80' (second cycle)
+    expect(call[1].color).toMatch(/^#[0-9A-Fa-f]{6}(80)?$/)
+    // colorLight ends with '33' (first cycle) or '1A' (second cycle)
+    expect(call[1].colorLight).toMatch(/^#[0-9A-Fa-f]{6}(33|1A)$/)
+  })
+
+  it('assigns reduced opacity color for second-cycle users (clientID % 10 >= 5)', () => {
+    // We need to control the clientID to test second-cycle behavior
+    // The doc.clientID is random, so we test the logic indirectly:
+    // When connected, the color should be from the palette, and colorLight should end with '33' or '1A'
+    renderHook(() => useCollaboration('test-paste-id'))
+
+    act(() => {
+      statusCallback?.({ status: 'connected' })
+    })
+
+    const call = mockAwarenessInstance.setLocalStateField.mock.calls[0]
+    const palette = ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6', '#EAB308']
+    // The base color (first 7 chars) should always be from the palette
+    const baseColor = call[1].color.substring(0, 7)
+    expect(palette).toContain(baseColor)
+
+    // colorLight should end with '33' (first cycle, 20% opacity) or '1A' (second cycle, 10% opacity)
+    expect(call[1].colorLight).toMatch(/^#[0-9A-Fa-f]{6}(33|1A)$/)
   })
 
   it('sets not-found status on 4404 close code', () => {

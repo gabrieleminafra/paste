@@ -1,6 +1,6 @@
 # Story 2.1: Real-Time Document Sync with Yjs & WebSocket
 
-Status: review
+Status: done
 
 ## Story
 

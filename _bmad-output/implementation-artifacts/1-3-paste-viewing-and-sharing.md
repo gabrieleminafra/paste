@@ -1,6 +1,6 @@
 # Story 1.3: Paste Viewing & Sharing
 
-Status: review
+Status: done
 
 ## Story
 
