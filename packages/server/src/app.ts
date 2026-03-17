@@ -1,10 +1,16 @@
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import Fastify, { type FastifyError } from "fastify";
 import fastifyEnv from "@fastify/env";
+import fastifyStatic from "@fastify/static";
 import rateLimit from "@fastify/rate-limit";
 import type { ApiResponse, ErrorCode } from "shared";
 import { envSchema } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
 import { pasteRoutes } from "./routes/pastes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function errorCodeFromStatus(statusCode: number): ErrorCode {
   if (statusCode === 404) return "NOT_FOUND";
@@ -24,7 +30,30 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   app.register(healthRoutes);
   app.register(pasteRoutes);
 
-  app.setNotFoundHandler((_request, reply) => {
+  const serveStatic = process.env.NODE_ENV === "production";
+
+  if (serveStatic) {
+    await app.register(fastifyStatic, {
+      root: path.join(__dirname, "../../client/dist"),
+      prefix: "/",
+      wildcard: false,
+    });
+  }
+
+  app.setNotFoundHandler((request, reply) => {
+    if (request.url.startsWith("/api/") || request.url.startsWith("/ws/")) {
+      const response: ApiResponse<never> = {
+        data: null,
+        error: {
+          message: "Not found",
+          code: "NOT_FOUND",
+        },
+      };
+      return reply.status(404).send(response);
+    }
+    if (serveStatic) {
+      return reply.sendFile("index.html");
+    }
     const response: ApiResponse<never> = {
       data: null,
       error: {
@@ -32,7 +61,7 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
         code: "NOT_FOUND",
       },
     };
-    reply.status(404).send(response);
+    return reply.status(404).send(response);
   });
 
   app.setErrorHandler((error: FastifyError, _request, reply) => {

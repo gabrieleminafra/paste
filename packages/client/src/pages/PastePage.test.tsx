@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import PastePage from './PastePage'
@@ -16,9 +16,24 @@ function renderWithRoute(pasteId: string) {
 }
 
 describe('PastePage', () => {
+  const originalClipboard = navigator.clipboard
+
+  beforeEach(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      writable: true,
+      configurable: true,
+    })
+  })
+
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    Object.defineProperty(navigator, 'clipboard', {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    })
   })
 
   it('shows loading skeleton initially', () => {
@@ -27,6 +42,38 @@ describe('PastePage', () => {
     renderWithRoute('abc123')
 
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument()
+  })
+
+  it('renders PageHeader', () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => {})))
+
+    renderWithRoute('abc123')
+
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByText('New Paste')).toBeInTheDocument()
+  })
+
+  it('renders main content area with id="main-content"', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            data: { id: 'abc123', content: 'Hello world', createdAt: '', updatedAt: '' },
+            error: null,
+          }),
+      }),
+    )
+
+    renderWithRoute('abc123')
+
+    await vi.waitFor(() => {
+      expect(screen.getByDisplayValue('Hello world')).toBeInTheDocument()
+    })
+
+    expect(document.getElementById('main-content')).toBeInTheDocument()
   })
 
   it('displays paste content after successful fetch', async () => {

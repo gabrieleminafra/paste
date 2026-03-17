@@ -1,6 +1,6 @@
 # Story 1.3: Paste Viewing & Sharing
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -41,47 +41,47 @@ So that anyone I share with can access my text.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Build ShareLink component (AC: #3)
-  - [ ] Create `packages/client/src/components/ShareLink.tsx` — displays current paste URL with a "Copy" button
-  - [ ] Implement clipboard copy via `navigator.clipboard.writeText(window.location.href)`
-  - [ ] Add "Copied!" confirmation state: text changes to "Copied!" in green-600 for 2 seconds, then reverts to "Copy"
-  - [ ] Style as secondary button: transparent background, blue-600 text, subtle border per UX button hierarchy
-  - [ ] URL text is selectable (rendered in a read-only input or span)
-  - [ ] Add `aria-label="Shareable paste link"` on URL element, `aria-label="Copy link to clipboard"` on copy button
-  - [ ] Create `packages/client/src/components/ShareLink.test.tsx`
+- [x] Task 1: Build ShareLink component (AC: #3)
+  - [x] Create `packages/client/src/components/ShareLink.tsx` — displays current paste URL with a "Copy" button
+  - [x] Implement clipboard copy via `navigator.clipboard.writeText(window.location.href)`
+  - [x] Add "Copied!" confirmation state: text changes to "Copied!" in green-600 for 2 seconds, then reverts to "Copy"
+  - [x] Style as secondary button: transparent background, blue-600 text, subtle border per UX button hierarchy
+  - [x] URL text is selectable (rendered in a read-only input or span)
+  - [x] Add `aria-label="Shareable paste link"` on URL element, `aria-label="Copy link to clipboard"` on copy button
+  - [x] Create `packages/client/src/components/ShareLink.test.tsx`
 
-- [ ] Task 2: Build PageHeader component (AC: #2)
-  - [ ] Create `packages/client/src/components/PageHeader.tsx` — thin non-sticky top bar
-  - [ ] Use semantic `<header>` element
-  - [ ] Include `ShareLink` component and a "New Paste" link (React Router `<Link to="/">`)
-  - [ ] "New Paste" link styled as tertiary action: no background/border, blue-600 text, underline on hover
-  - [ ] Add skip-to-content link as first focusable element: `<a href="#main-content">Skip to content</a>` (visually hidden, visible on focus)
-  - [ ] Create `packages/client/src/components/PageHeader.test.tsx`
+- [x] Task 2: Build PageHeader component (AC: #2)
+  - [x] Create `packages/client/src/components/PageHeader.tsx` — thin non-sticky top bar
+  - [x] Use semantic `<header>` element
+  - [x] Include `ShareLink` component and a "New Paste" link (React Router `<Link to="/">`)
+  - [x] "New Paste" link styled as tertiary action: no background/border, blue-600 text, underline on hover
+  - [x] Add skip-to-content link as first focusable element: `<a href="#main-content">Skip to content</a>` (visually hidden, visible on focus)
+  - [x] Create `packages/client/src/components/PageHeader.test.tsx`
 
-- [ ] Task 3: Enhance PastePage with PageHeader and full viewing experience (AC: #1, #2, #4)
-  - [ ] Update `packages/client/src/pages/PastePage.tsx` to integrate PageHeader at the top
-  - [ ] Wrap main content in `<main id="main-content">` for skip-to-content target
-  - [ ] Ensure paste content displays in read-only textarea with monospace font (font-mono), same styling as CreatePage editor
-  - [ ] Ensure loading state shows skeleton/shimmer on content area (no full-page spinner per UX-DR12)
-  - [ ] Ensure 404 state shows centered "Paste not found" message with link to create new paste
-  - [ ] Update `packages/client/src/pages/PastePage.test.tsx`
+- [x] Task 3: Enhance PastePage with PageHeader and full viewing experience (AC: #1, #2, #4)
+  - [x] Update `packages/client/src/pages/PastePage.tsx` to integrate PageHeader at the top
+  - [x] Wrap main content in `<main id="main-content">` for skip-to-content target
+  - [x] Ensure paste content displays in read-only textarea with monospace font (font-mono), same styling as CreatePage editor
+  - [x] Ensure loading state shows skeleton/shimmer on content area (no full-page spinner per UX-DR12)
+  - [x] Ensure 404 state shows centered "Paste not found" message with link to create new paste
+  - [x] Update `packages/client/src/pages/PastePage.test.tsx`
 
-- [ ] Task 4: Create NotFoundPage for unknown routes (AC: #4)
-  - [ ] Create `packages/client/src/pages/NotFoundPage.tsx` — centered "Page not found" message with link to create a new paste
-  - [ ] Add catch-all route `*` in `App.tsx` pointing to `NotFoundPage`
-  - [ ] Create `packages/client/src/pages/NotFoundPage.test.tsx`
+- [x] Task 4: Create NotFoundPage for unknown routes (AC: #4)
+  - [x] Create `packages/client/src/pages/NotFoundPage.tsx` — centered "Page not found" message with link to create a new paste
+  - [x] Add catch-all route `*` in `App.tsx` pointing to `NotFoundPage`
+  - [x] Create `packages/client/src/pages/NotFoundPage.test.tsx`
 
-- [ ] Task 5: Configure @fastify/static for SPA serving (AC: #6)
-  - [ ] Register `@fastify/static` in `packages/server/src/app.ts` to serve `packages/client/dist/` in production
-  - [ ] Configure SPA fallback: use `setNotFoundHandler` to serve `index.html` for non-API/non-WS routes that don't match static files
-  - [ ] Only enable static serving when `NODE_ENV !== 'development'` (Vite dev server handles this in dev via proxy)
-  - [ ] Ensure API routes (`/api/*`) and future WebSocket routes (`/ws/*`) are NOT caught by the SPA fallback
+- [x] Task 5: Configure @fastify/static for SPA serving (AC: #6)
+  - [x] Register `@fastify/static` in `packages/server/src/app.ts` to serve `packages/client/dist/` in production
+  - [x] Configure SPA fallback: use `setNotFoundHandler` to serve `index.html` for non-API/non-WS routes that don't match static files
+  - [x] Only enable static serving when `NODE_ENV !== 'development'` (Vite dev server handles this in dev via proxy)
+  - [x] Ensure API routes (`/api/*`) and future WebSocket routes (`/ws/*`) are NOT caught by the SPA fallback
 
-- [ ] Task 6: Add tests (AC: all)
-  - [ ] `packages/client/src/components/ShareLink.test.tsx` — test URL display, copy button click triggers clipboard write, "Copied!" state appears and reverts after 2s
-  - [ ] `packages/client/src/components/PageHeader.test.tsx` — test renders header element, contains ShareLink, contains "New Paste" link to `/`, skip-to-content link exists
-  - [ ] `packages/client/src/pages/PastePage.test.tsx` — test PageHeader renders, content displays in read-only textarea, loading state shows skeleton, 404 shows error message with link
-  - [ ] `packages/client/src/pages/NotFoundPage.test.tsx` — test renders "not found" message with create link
+- [x] Task 6: Add tests (AC: all)
+  - [x] `packages/client/src/components/ShareLink.test.tsx` — test URL display, copy button click triggers clipboard write, "Copied!" state appears and reverts after 2s
+  - [x] `packages/client/src/components/PageHeader.test.tsx` — test renders header element, contains ShareLink, contains "New Paste" link to `/`, skip-to-content link exists
+  - [x] `packages/client/src/pages/PastePage.test.tsx` — test PageHeader renders, content displays in read-only textarea, loading state shows skeleton, 404 shows error message with link
+  - [x] `packages/client/src/pages/NotFoundPage.test.tsx` — test renders "not found" message with create link
 
 ## Dev Notes
 
@@ -363,10 +363,37 @@ No new dependencies needed for this story. All required packages are already ins
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
+- @fastify/static registration initially failed in test environment because `NODE_ENV` was not set to `development` — resolved by gating on `NODE_ENV === "production"` instead of `!== "development"`
+
 ### Completion Notes List
 
+- Task 1: Built ShareLink component with clipboard copy via `navigator.clipboard.writeText`, "Copied!" feedback with 2s auto-revert, secondary button styling, aria-labels. 6 tests passing.
+- Task 2: Built PageHeader with semantic `<header>`, ShareLink integration, "New Paste" tertiary link, skip-to-content accessibility link. 4 tests passing.
+- Task 3: Enhanced PastePage with PageHeader at top and `<main id="main-content">` wrapper across all states (loading, error, notFound, content). 7 tests passing (2 new).
+- Task 4: Created NotFoundPage with "Page not found" message and link to create new paste. Added catch-all `*` route in App.tsx. 2 tests passing.
+- Task 5: Configured @fastify/static for production SPA serving. Replaced setNotFoundHandler to differentiate API/WS 404s (JSON envelope) from page 404s (serve index.html). Gated on `NODE_ENV === "production"`. All 14 server tests passing.
+- Task 6: All component tests written and co-located. Full suite: 51 tests across 10 files, zero regressions.
+
+### Change Log
+
+- 2026-03-17: Implemented Story 1.3 — Paste Viewing & Sharing (all 6 tasks complete)
+
 ### File List
+
+**New files:**
+- packages/client/src/components/ShareLink.tsx
+- packages/client/src/components/ShareLink.test.tsx
+- packages/client/src/components/PageHeader.tsx
+- packages/client/src/components/PageHeader.test.tsx
+- packages/client/src/pages/NotFoundPage.tsx
+- packages/client/src/pages/NotFoundPage.test.tsx
+
+**Modified files:**
+- packages/client/src/App.tsx — added NotFoundPage catch-all route
+- packages/client/src/pages/PastePage.tsx — integrated PageHeader, added `<main>` wrapper
+- packages/client/src/pages/PastePage.test.tsx — added PageHeader and main-content tests
+- packages/server/src/app.ts — registered @fastify/static, SPA fallback in setNotFoundHandler
