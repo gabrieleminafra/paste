@@ -1,6 +1,6 @@
 # Story 2.3: Collaborator Cursor Presence
 
-Status: review
+Status: done
 
 ## Story
 

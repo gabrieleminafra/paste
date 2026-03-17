@@ -53,7 +53,7 @@ development_status:
   epic-2: in-progress
   2-1-real-time-document-sync-with-yjs-and-websocket: done
   2-2-concurrent-multi-user-editing: done
-  2-3-collaborator-cursor-presence: review
+  2-3-collaborator-cursor-presence: done
   epic-2-retrospective: optional
 
   # Epic 3: Connection Resilience & Reliability

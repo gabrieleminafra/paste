@@ -1,7 +1,12 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { FastifyEnvOptions } from "@fastify/env";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export const envSchema: FastifyEnvOptions = {
-  dotenv: true,
+  dotenv: { path: path.resolve(__dirname, "../../../.env") },
   schema: {
     type: "object",
     required: ["DATABASE_URL"],
