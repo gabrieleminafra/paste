@@ -97,6 +97,13 @@ describe('ConnectionStatus', () => {
     })
   })
 
+  // WCAG AA compliance (Story 4.2)
+  // Connection status uses non-color alternatives:
+  // - Connected: green filled dot + "Connected" text/tooltip
+  // - Reconnecting: amber hollow ring (border only) + pulse animation + "Reconnecting..." text
+  // - Disconnected: red filled dot + "Disconnected" text/tooltip
+  // Different shapes (filled vs ring) provide non-color distinction per WCAG 1.4.1
+
   it('applies motion-safe:animate-pulse only for reconnecting state', () => {
     const { rerender } = render(<ConnectionStatus status="reconnecting" />)
 

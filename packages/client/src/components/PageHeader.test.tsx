@@ -82,4 +82,17 @@ describe('PageHeader', () => {
     expect(skipLink).toBeInTheDocument()
     expect(skipLink).toHaveAttribute('href', '#main-content')
   })
+
+  // Accessibility tests (Story 4.2)
+  describe('accessibility', () => {
+    it('New Paste link has focus ring classes', () => {
+      renderPageHeader()
+
+      const newPasteLink = screen.getByText('New Paste')
+      expect(newPasteLink.className).toContain('focus:ring-2')
+      expect(newPasteLink.className).toContain('focus:ring-blue-500')
+      expect(newPasteLink.className).toContain('focus:ring-offset-2')
+      expect(newPasteLink.className).toContain('focus:outline-none')
+    })
+  })
 })

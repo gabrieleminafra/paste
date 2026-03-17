@@ -45,7 +45,8 @@ export default function PasteEditor({ ytext, awareness, undoManager }: PasteEdit
   return (
     <div
       ref={editorRef}
-      className="w-full min-h-[60vh] border border-border rounded-md overflow-hidden"
+      className="w-full min-h-[60vh] border border-border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
+      aria-label="Paste content editor"
       data-testid="paste-editor"
     />
   )

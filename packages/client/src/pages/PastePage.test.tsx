@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, cleanup, act } from '@testing-library/react'
+import { render, screen, cleanup, act, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
 // Mock useCollaboration hook
@@ -454,5 +454,102 @@ describe('PastePage', () => {
     expect(screen.queryByText('Reconnecting...')).not.toBeInTheDocument()
 
     vi.useRealTimers()
+  })
+
+  // Keyboard shortcut tests (Story 4.2)
+  describe('Cmd/Ctrl+Shift+C keyboard shortcut', () => {
+    it('copies paste URL to clipboard on Cmd+Shift+C', async () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      await act(async () => {
+        fireEvent.keyDown(window, { key: 'c', metaKey: true, shiftKey: true })
+      })
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(window.location.href)
+    })
+
+    it('copies paste URL to clipboard on Ctrl+Shift+C', async () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      await act(async () => {
+        fireEvent.keyDown(window, { key: 'c', ctrlKey: true, shiftKey: true })
+      })
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(window.location.href)
+    })
+
+    it('shows "Copied!" confirmation in ShareLink after shortcut', async () => {
+      vi.useFakeTimers()
+
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      await act(async () => {
+        fireEvent.keyDown(window, { key: 'c', metaKey: true, shiftKey: true })
+      })
+
+      expect(screen.getByText('Copied!')).toBeInTheDocument()
+
+      vi.useRealTimers()
+    })
+
+    it('does NOT copy on Cmd+C without Shift (standard copy)', async () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      await act(async () => {
+        fireEvent.keyDown(window, { key: 'c', metaKey: true, shiftKey: false })
+      })
+
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled()
+    })
+
+    it('does NOT copy on Shift+C without Cmd/Ctrl', async () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      await act(async () => {
+        fireEvent.keyDown(window, { key: 'c', shiftKey: true })
+      })
+
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled()
+    })
   })
 })

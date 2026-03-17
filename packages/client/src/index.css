@@ -15,3 +15,9 @@ body {
   color: #1A1A1A;
   background: #FFFFFF;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}

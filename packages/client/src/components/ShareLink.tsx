@@ -1,6 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 
-export default function ShareLink() {
+export interface ShareLinkHandle {
+  triggerCopy: () => void
+}
+
+const ShareLink = forwardRef<ShareLinkHandle>(function ShareLink(_props, ref) {
   const [copied, setCopied] = useState(false)
   const [copyFailed, setCopyFailed] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -25,6 +29,8 @@ export default function ShareLink() {
       timeoutRef.current = setTimeout(() => setCopyFailed(false), 2000)
     }
   }
+
+  useImperativeHandle(ref, () => ({ triggerCopy: handleCopy }), [])
 
   const buttonText = copyFailed ? 'Failed' : copied ? 'Copied!' : 'Copy'
   const buttonColor = copyFailed
@@ -52,4 +58,6 @@ export default function ShareLink() {
       </button>
     </div>
   )
-}
+})
+
+export default ShareLink

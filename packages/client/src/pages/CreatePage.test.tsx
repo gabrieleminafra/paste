@@ -144,9 +144,9 @@ describe('CreatePage', () => {
         </MemoryRouter>,
       )
 
-      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
-      expect(outerDiv?.className).toContain('justify-center')
-      expect(outerDiv?.className).toContain('px-4')
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('justify-center')
+      expect(main?.className).toContain('px-4')
 
       const innerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.max-w-\\[800px\\]')
       expect(innerDiv).toBeInTheDocument()
@@ -159,9 +159,9 @@ describe('CreatePage', () => {
         </MemoryRouter>,
       )
 
-      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
-      expect(outerDiv?.className).toContain('max-md:px-2')
-      expect(outerDiv?.className).toContain('max-md:pt-4')
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('max-md:px-2')
+      expect(main?.className).toContain('max-md:pt-4')
     })
 
     it('applies tablet-specific padding classes', () => {
@@ -171,9 +171,9 @@ describe('CreatePage', () => {
         </MemoryRouter>,
       )
 
-      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
-      expect(outerDiv?.className).toContain('max-lg:px-3')
-      expect(outerDiv?.className).toContain('max-lg:pt-8')
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('max-lg:px-3')
+      expect(main?.className).toContain('max-lg:pt-8')
     })
 
     it('applies full-width class to Create button on mobile', () => {
@@ -196,6 +196,33 @@ describe('CreatePage', () => {
 
       const textarea = screen.getByPlaceholderText('Paste your text here...')
       expect(textarea.className).toContain('max-md:min-h-[40vh]')
+    })
+  })
+
+  // Accessibility tests (Story 4.2)
+  describe('accessibility', () => {
+    it('has skip-to-content link as first focusable element', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const skipLink = screen.getByText('Skip to content')
+      expect(skipLink).toBeInTheDocument()
+      expect(skipLink).toHaveAttribute('href', '#main-content')
+    })
+
+    it('has main element with id="main-content"', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const main = document.getElementById('main-content')
+      expect(main).toBeInTheDocument()
+      expect(main?.tagName).toBe('MAIN')
     })
   })
 

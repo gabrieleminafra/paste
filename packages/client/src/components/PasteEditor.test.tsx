@@ -113,4 +113,19 @@ describe('PasteEditor', () => {
     render(<PasteEditor {...createProps()} />)
     expect(capturedExtensions).toContain('__cursorReducedMotionTheme__')
   })
+
+  // Accessibility tests (Story 4.2)
+  it('has focus-within ring classes on editor container', () => {
+    render(<PasteEditor {...createProps()} />)
+    const container = screen.getByTestId('paste-editor')
+    expect(container.className).toContain('focus-within:ring-2')
+    expect(container.className).toContain('focus-within:ring-blue-500')
+    expect(container.className).toContain('focus-within:ring-offset-2')
+  })
+
+  it('has aria-label on editor container', () => {
+    render(<PasteEditor {...createProps()} />)
+    const container = screen.getByTestId('paste-editor')
+    expect(container).toHaveAttribute('aria-label', 'Paste content editor')
+  })
 })
