@@ -57,14 +57,14 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Connection Resilience & Reliability
-  epic-3: in-progress
+  epic-3: done
   3-1-auto-reconnection-and-state-synchronization: done
   3-2-graceful-disconnection-and-connection-status: done
   epic-3-retrospective: optional
 
   # Epic 4: UX Polish & Accessibility
-  epic-4: in-progress
+  epic-4: done
   4-1-responsive-layout: done
-  4-2-accessibility-and-keyboard-shortcuts: review
-  4-3-loading-states-and-production-build: ready-for-dev
+  4-2-accessibility-and-keyboard-shortcuts: done
+  4-3-loading-states-and-production-build: done
   epic-4-retrospective: optional

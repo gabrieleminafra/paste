@@ -135,6 +135,67 @@ describe('CreatePage', () => {
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
   })
 
+  it('retries successfully after initial failure', async () => {
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ data: null, error: { message: 'Server error', code: 'INTERNAL_ERROR' } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'retry123' }, error: null }),
+      })
+    vi.stubGlobal('fetch', mockFetch)
+
+    render(
+      <MemoryRouter>
+        <CreatePage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+      target: { value: 'Retry content' },
+    })
+
+    // First attempt — fails
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Server error')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+    // Second attempt — retry succeeds
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+    await vi.waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/retry123', { replace: true })
+    })
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows generic error on network failure', async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'))
+    vi.stubGlobal('fetch', mockFetch)
+
+    render(
+      <MemoryRouter>
+        <CreatePage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+      target: { value: 'Test content' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Failed to create paste')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
   // Responsive layout tests (Story 4.1)
   describe('responsive layout', () => {
     it('has desktop-first centered layout with max-w-800px', () => {

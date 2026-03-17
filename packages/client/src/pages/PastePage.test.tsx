@@ -58,7 +58,7 @@ describe('PastePage', () => {
     })
   })
 
-  it('shows loading skeleton while connecting', () => {
+  it('shows shimmer skeleton while connecting', () => {
     mockUseCollaboration.mockReturnValue({
       ytext: {},
       awareness: {},
@@ -69,7 +69,11 @@ describe('PastePage', () => {
 
     renderWithRoute('abc123')
 
-    expect(document.querySelector('.animate-pulse')).toBeInTheDocument()
+    const skeleton = screen.getByTestId('shimmer-skeleton')
+    expect(skeleton).toBeInTheDocument()
+    // Multiple shimmer bars mimicking text lines
+    const shimmerBars = skeleton.querySelectorAll('.shimmer-bar')
+    expect(shimmerBars.length).toBeGreaterThanOrEqual(5)
   })
 
   it('renders PageHeader', () => {
@@ -142,7 +146,7 @@ describe('PastePage', () => {
     renderWithRoute('abc123')
 
     expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
-    expect(document.querySelector('.animate-pulse')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('shimmer-skeleton')).not.toBeInTheDocument()
   })
 
   it('only shows skeleton loader during initial connecting state', () => {
@@ -156,7 +160,7 @@ describe('PastePage', () => {
 
     renderWithRoute('abc123')
 
-    expect(document.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(screen.getByTestId('shimmer-skeleton')).toBeInTheDocument()
     expect(screen.queryByTestId('paste-editor')).not.toBeInTheDocument()
   })
 
@@ -173,6 +177,25 @@ describe('PastePage', () => {
 
     expect(screen.getByText('Paste not found')).toBeInTheDocument()
     expect(screen.getByText('Create a new paste')).toHaveAttribute('href', '/')
+  })
+
+  it('does not show editor or skeleton on not-found state', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'not-found',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('nonexistent')
+
+    expect(screen.queryByTestId('paste-editor')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('shimmer-skeleton')).not.toBeInTheDocument()
+    expect(screen.getByText('Paste not found')).toBeInTheDocument()
+    const link = screen.getByText('Create a new paste')
+    expect(link.tagName).toBe('A')
+    expect(link).toHaveAttribute('href', '/')
   })
 
   it('renders without error when multiple users are connected', () => {
@@ -404,7 +427,7 @@ describe('PastePage', () => {
 
       renderWithRoute('abc123')
 
-      const skeletonWrapper = document.querySelector('.animate-pulse')?.parentElement
+      const skeletonWrapper = screen.getByTestId('shimmer-skeleton').parentElement
       expect(skeletonWrapper?.className).not.toContain('max-w-[800px]')
       expect(skeletonWrapper?.className).toContain('w-full')
     })

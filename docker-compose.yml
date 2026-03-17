@@ -1,14 +1,43 @@
 services:
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pastebin}:${POSTGRES_PASSWORD:-pastebin}@postgres:5432/${POSTGRES_DB:-pastebin}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["npx", "drizzle-kit", "migrate"]
+    restart: "no"
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pastebin}:${POSTGRES_PASSWORD:-pastebin}@postgres:5432/${POSTGRES_DB:-pastebin}
+      PORT: "3000"
+      NODE_ENV: production
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: pastebin
-      POSTGRES_PASSWORD: pastebin
-      POSTGRES_DB: pastebin
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-pastebin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pastebin}
+      POSTGRES_DB: ${POSTGRES_DB:-pastebin}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pastebin}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:

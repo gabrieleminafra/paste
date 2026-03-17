@@ -5,9 +5,15 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./src/types.ts",
+      "import": {
+        "development": "./src/types.ts",
+        "default": "./dist/types.js"
+      },
       "types": "./src/types.ts"
     }
+  },
+  "scripts": {
+    "build": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.8.2"

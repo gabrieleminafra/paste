@@ -38,7 +38,15 @@ export default function PastePage() {
         <PageHeader ref={shareLinkRef} />
         <main id="main-content" className="flex items-start justify-center pt-12 px-4 max-md:px-2 max-md:pt-4">
           <div className="w-full">
-            <div className="w-full min-h-[60vh] rounded-md bg-gray-100 animate-pulse" />
+            <div className="w-full min-h-[60vh] rounded-md bg-gray-50 p-4 space-y-3" data-testid="shimmer-skeleton">
+              <div className="shimmer-bar h-4 rounded w-full" />
+              <div className="shimmer-bar h-4 rounded w-[85%]" />
+              <div className="shimmer-bar h-4 rounded w-[92%]" />
+              <div className="shimmer-bar h-4 rounded w-[70%]" />
+              <div className="shimmer-bar h-4 rounded w-[95%]" />
+              <div className="shimmer-bar h-4 rounded w-[88%]" />
+              <div className="shimmer-bar h-4 rounded w-[76%]" />
+            </div>
           </div>
         </main>
       </div>
