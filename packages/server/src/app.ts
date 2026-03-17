@@ -4,10 +4,12 @@ import Fastify, { type FastifyError } from "fastify";
 import fastifyEnv from "@fastify/env";
 import fastifyStatic from "@fastify/static";
 import rateLimit from "@fastify/rate-limit";
+import websocket from "@fastify/websocket";
 import type { ApiResponse, ErrorCode } from "shared";
 import { envSchema } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
 import { pasteRoutes } from "./routes/pastes.js";
+import { yjsHandler } from "./ws/yjs-handler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,9 +28,11 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
 
   await app.register(fastifyEnv, envSchema);
   await app.register(rateLimit);
+  await app.register(websocket);
 
   app.register(healthRoutes);
   app.register(pasteRoutes);
+  app.register(yjsHandler);
 
   const serveStatic = process.env.NODE_ENV === "production";
 

@@ -1,12 +1,14 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ApiResponse } from "shared";
 import { nanoid } from "nanoid";
+import * as Y from "yjs";
 import { eq } from "drizzle-orm";
 import { createDbClient } from "../db/client.js";
 import { pastes } from "../db/schema.js";
+import { loadYjsDoc } from "../ws/yjs-utils.js";
 
 const MAX_CONTENT_SIZE = 1_048_576; // 1MB
-const NANOID_PATTERN = /^[A-Za-z0-9_-]{21}$/;
+export const NANOID_PATTERN = /^[A-Za-z0-9_-]{21}$/;
 
 export const pasteRoutes: FastifyPluginAsync = async (app) => {
   const { db, sql } = createDbClient(app.config.DATABASE_URL);
@@ -52,9 +54,15 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
 
       const id = nanoid();
 
+      // Store as Yjs binary state so document-manager can load it
+      const doc = new Y.Doc();
+      doc.getText("content").insert(0, content);
+      const yState = Y.encodeStateAsUpdate(doc);
+      doc.destroy();
+
       await db.insert(pastes).values({
         id,
-        content: contentBytes,
+        content: Buffer.from(yState),
       });
 
       const response: ApiResponse<{ id: string }> = {
@@ -101,6 +109,12 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
       }
 
       const paste = result[0];
+
+      // Decode Yjs binary state; falls back to legacy plain text
+      const doc = loadYjsDoc(paste.content);
+      const textContent = doc.getText("content").toString();
+      doc.destroy();
+
       const response: ApiResponse<{
         id: string;
         content: string;
@@ -109,7 +123,7 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
       }> = {
         data: {
           id: paste.id,
-          content: Buffer.from(paste.content).toString("utf-8"),
+          content: textContent,
           createdAt: paste.createdAt.toISOString(),
           updatedAt: paste.updatedAt.toISOString(),
         },

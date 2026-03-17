@@ -1,56 +1,13 @@
-import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 import PageHeader from '../components/PageHeader'
+import PasteEditor from '../components/PasteEditor'
+import { useCollaboration } from '../hooks/useCollaboration'
 
 export default function PastePage() {
   const { pasteId } = useParams<{ pasteId: string }>()
-  const [content, setContent] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
-  const [fetchError, setFetchError] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
+  const { ytext, awareness, connectionStatus, undoManager } = useCollaboration(pasteId!)
 
-  useEffect(() => {
-    setContent(null)
-    setNotFound(false)
-    setFetchError(false)
-    setLoading(true)
-
-    const controller = new AbortController()
-
-    async function fetchPaste() {
-      try {
-        const res = await fetch(`/api/pastes/${pasteId}`, {
-          signal: controller.signal,
-        })
-        if (res.status === 404) {
-          setNotFound(true)
-          return
-        }
-        if (!res.ok) {
-          setFetchError(true)
-          return
-        }
-        const json = await res.json()
-        if (json.data) {
-          setContent(json.data.content)
-        } else {
-          setNotFound(true)
-        }
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          setFetchError(true)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchPaste()
-    return () => controller.abort()
-  }, [pasteId, retryCount])
-
-  if (loading) {
+  if (connectionStatus === 'connecting') {
     return (
       <div className="min-h-screen">
         <PageHeader />
@@ -63,27 +20,7 @@ export default function PastePage() {
     )
   }
 
-  if (fetchError) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <PageHeader />
-        <main id="main-content" className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-lg text-muted mb-4">Something went wrong</p>
-            <button
-              type="button"
-              onClick={() => setRetryCount((c) => c + 1)}
-              className="text-primary hover:text-primary-hover underline"
-            >
-              Try again
-            </button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  if (notFound) {
+  if (connectionStatus === 'not-found') {
     return (
       <div className="min-h-screen flex flex-col">
         <PageHeader />
@@ -102,17 +39,31 @@ export default function PastePage() {
     )
   }
 
+  if (connectionStatus === 'disconnected') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <PageHeader />
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-lg text-muted mb-4">Connection lost</p>
+            <Link
+              to="/"
+              className="text-primary hover:text-primary-hover underline"
+            >
+              Create a new paste
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen">
       <PageHeader />
       <main id="main-content" className="flex items-start justify-center pt-12 px-4">
         <div className="w-full max-w-[800px]">
-          <textarea
-            readOnly
-            value={content ?? ''}
-            aria-label="Paste content"
-            className="w-full min-h-[60vh] p-4 font-mono text-[#1A1A1A] bg-white border border-border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          />
+          <PasteEditor ytext={ytext} awareness={awareness} undoManager={undoManager} />
         </div>
       </main>
     </div>

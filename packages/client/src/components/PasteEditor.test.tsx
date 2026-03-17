@@ -1,0 +1,69 @@
+// @vitest-environment jsdom
+import '@testing-library/jest-dom/vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
+import { render, screen, cleanup } from '@testing-library/react'
+import * as Y from 'yjs'
+
+vi.mock('codemirror', () => {
+  const MockView = Object.assign(
+    class {
+      destroy() { /* noop */ }
+    },
+    { theme: () => [], lineWrapping: [] },
+  )
+  return { EditorView: MockView, basicSetup: [] }
+})
+
+vi.mock('@codemirror/state', () => ({
+  EditorState: { create: () => ({}) },
+}))
+
+vi.mock('@codemirror/view', () => {
+  const MockView = Object.assign(
+    class {
+      destroy() { /* noop */ }
+    },
+    { theme: () => [], lineWrapping: [] },
+  )
+  return { EditorView: MockView }
+})
+
+vi.mock('y-codemirror.next', () => ({
+  yCollab: () => [],
+}))
+
+import PasteEditor from './PasteEditor'
+
+describe('PasteEditor', () => {
+  let doc: Y.Doc
+
+  afterEach(() => {
+    cleanup()
+    doc?.destroy()
+  })
+
+  function createProps() {
+    doc = new Y.Doc()
+    const ytext = doc.getText('content')
+    const awareness = { on: vi.fn(), off: vi.fn(), getStates: vi.fn().mockReturnValue(new Map()) } as any
+    const undoManager = new Y.UndoManager(ytext)
+    return { ytext, awareness, undoManager }
+  }
+
+  it('renders editor container with data-testid', () => {
+    render(<PasteEditor {...createProps()} />)
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+  })
+
+  it('applies correct CSS classes to container', () => {
+    render(<PasteEditor {...createProps()} />)
+    const container = screen.getByTestId('paste-editor')
+    expect(container).toHaveClass('w-full', 'min-h-[60vh]', 'border', 'border-border', 'rounded-md')
+  })
+
+  it('mounts and unmounts without errors', () => {
+    const { unmount } = render(<PasteEditor {...createProps()} />)
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+    unmount()
+  })
+})

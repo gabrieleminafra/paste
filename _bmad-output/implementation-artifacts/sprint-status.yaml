@@ -1,5 +1,5 @@
 # generated: 2026-03-16
-# last_updated: 2026-03-16
+# last_updated: 2026-03-17
 # project: pastebin
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,15 +43,15 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Paste Creation & Sharing
-  epic-1: in-progress
+  epic-1: done
   1-1-project-foundation-and-paste-storage: done
   1-2-paste-creation-flow: done
-  1-3-paste-viewing-and-sharing: review
+  1-3-paste-viewing-and-sharing: done
   epic-1-retrospective: optional
 
   # Epic 2: Real-Time Collaborative Editing
-  epic-2: backlog
-  2-1-real-time-document-sync-with-yjs-and-websocket: backlog
+  epic-2: in-progress
+  2-1-real-time-document-sync-with-yjs-and-websocket: review
   2-2-concurrent-multi-user-editing: backlog
   2-3-collaborator-cursor-presence: backlog
   epic-2-retrospective: optional
