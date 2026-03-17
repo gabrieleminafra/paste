@@ -194,6 +194,32 @@ describe("DocumentManager", () => {
     expect(connections!.size).toBe(1);
   });
 
+  it("loads doc from DB after cache is cleared (simulates server restart)", async () => {
+    // Create a doc with content and encode it
+    const sourceDoc = new Y.Doc();
+    sourceDoc.getText("content").insert(0, "client 1 edits");
+    const encoded = Y.encodeStateAsUpdate(sourceDoc);
+    sourceDoc.destroy();
+
+    const dbWithContent = createMockDb([{ id: "paste-restart", content: encoded }]);
+    const mgr = new DocumentManager(dbWithContent as never);
+
+    // First client connects and the doc is loaded
+    const { doc: doc1 } = await mgr.getOrCreateDoc("paste-restart");
+    expect(doc1.getText("content").toString()).toBe("client 1 edits");
+
+    // Simulate server restart: remove connection and let cleanup happen
+    const mockWs = {} as WebSocket;
+    mgr.addConnection("paste-restart", mockWs);
+    mgr.removeConnection("paste-restart", mockWs);
+    await vi.advanceTimersByTimeAsync(0);
+
+    // In-memory cache is now cleared — next call should re-load from DB
+    const { doc: doc2 } = await mgr.getOrCreateDoc("paste-restart");
+    expect(doc2).not.toBe(doc1); // New doc instance
+    expect(doc2.getText("content").toString()).toBe("client 1 edits");
+  });
+
   it("persistAll persists all in-memory docs", async () => {
     const dbWithAB = createMockDb([
       { id: "paste-a", content: new Uint8Array(0) },

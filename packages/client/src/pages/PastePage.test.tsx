@@ -105,7 +105,7 @@ describe('PastePage', () => {
     expect(document.getElementById('main-content')).toBeInTheDocument()
   })
 
-  it('shows disconnected state when connection is lost', () => {
+  it('keeps editor visible when disconnected (local Yjs doc still has content)', () => {
     mockUseCollaboration.mockReturnValue({
       ytext: {},
       awareness: {},
@@ -116,8 +116,38 @@ describe('PastePage', () => {
 
     renderWithRoute('abc123')
 
-    expect(screen.getByText('Connection lost')).toBeInTheDocument()
-    expect(screen.getByText('Create a new paste')).toHaveAttribute('href', '/')
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+    expect(screen.queryByText('Connection lost')).not.toBeInTheDocument()
+  })
+
+  it('keeps editor visible during reconnecting state', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'reconnecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+    expect(document.querySelector('.animate-pulse')).not.toBeInTheDocument()
+  })
+
+  it('only shows skeleton loader during initial connecting state', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connecting',
+      connectedUsers: 0,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(screen.queryByTestId('paste-editor')).not.toBeInTheDocument()
   })
 
   it('shows "Paste not found" when connection closes with 4404', () => {

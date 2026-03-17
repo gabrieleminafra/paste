@@ -8,15 +8,17 @@ let connectionCloseCallback: ((event: CloseEvent | null) => void) | null = null
 const mockProviderDestroy = vi.fn()
 
 let mockAwarenessInstance: any = null
+let lastProviderOpts: any = null
 
 vi.mock('y-websocket', () => {
   return {
     WebsocketProvider: class MockWebsocketProvider {
       awareness: unknown
       shouldConnect = true
-      constructor(_url: string, _room: string, _doc: unknown, opts?: { awareness?: unknown }) {
+      constructor(_url: string, _room: string, _doc: unknown, opts?: Record<string, unknown>) {
         this.awareness = opts?.awareness ?? {}
         mockAwarenessInstance = this.awareness
+        lastProviderOpts = opts
       }
       on(event: string, cb: unknown) {
         if (event === 'status') statusCallback = cb as typeof statusCallback
@@ -148,5 +150,134 @@ describe('useCollaboration', () => {
     })
 
     expect(result.current.connectionStatus).toBe('not-found')
+  })
+
+  it('configures WebsocketProvider with reconnection parameters', () => {
+    renderHook(() => useCollaboration('test-paste-id'))
+
+    expect(lastProviderOpts).toMatchObject({
+      maxBackoffTime: 10000,
+      resyncInterval: 30000,
+    })
+  })
+
+  it('shows reconnecting status when provider reconnects after prior connection', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    // First connection
+    act(() => {
+      statusCallback?.({ status: 'connected' })
+    })
+    expect(result.current.connectionStatus).toBe('connected')
+
+    // Connection drops, provider tries to reconnect
+    act(() => {
+      statusCallback?.({ status: 'connecting' })
+    })
+    expect(result.current.connectionStatus).toBe('reconnecting')
+  })
+
+  it('shows connecting (not reconnecting) on initial connection attempt', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    // Initial connecting — never been connected before
+    act(() => {
+      statusCallback?.({ status: 'connecting' })
+    })
+    expect(result.current.connectionStatus).toBe('connecting')
+  })
+
+  it('transitions from reconnecting back to connected on successful reconnect', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    // connected → reconnecting → connected
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    act(() => { statusCallback?.({ status: 'connecting' }) })
+    expect(result.current.connectionStatus).toBe('reconnecting')
+
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    expect(result.current.connectionStatus).toBe('connected')
+  })
+
+  it('resets wasConnected tracking when pasteId changes (new provider)', () => {
+    const { result, rerender } = renderHook(
+      ({ pasteId }) => useCollaboration(pasteId),
+      { initialProps: { pasteId: 'paste-1' } },
+    )
+
+    // Connect on first paste
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    expect(result.current.connectionStatus).toBe('connected')
+
+    // Change pasteId — creates new provider, resets wasConnected
+    rerender({ pasteId: 'paste-2' })
+
+    // New initial connection should show 'connecting', not 'reconnecting'
+    act(() => { statusCallback?.({ status: 'connecting' }) })
+    expect(result.current.connectionStatus).toBe('connecting')
+  })
+
+  it('4404 handling still prevents reconnection after not-found', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    act(() => {
+      statusCallback?.({ status: 'connected' })
+    })
+    act(() => {
+      connectionCloseCallback?.({ code: 4404, reason: 'Paste not found' } as CloseEvent)
+    })
+
+    expect(result.current.connectionStatus).toBe('not-found')
+  })
+
+  it('sets disconnected status when provider emits disconnected', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    expect(result.current.connectionStatus).toBe('connected')
+
+    act(() => { statusCallback?.({ status: 'disconnected' }) })
+    expect(result.current.connectionStatus).toBe('disconnected')
+  })
+
+  it('does not overwrite not-found status with subsequent status events', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    act(() => {
+      connectionCloseCallback?.({ code: 4404, reason: 'Paste not found' } as CloseEvent)
+    })
+    expect(result.current.connectionStatus).toBe('not-found')
+
+    // Simulate a late status event that could race with 4404 handling
+    act(() => { statusCallback?.({ status: 'connecting' }) })
+    expect(result.current.connectionStatus).toBe('not-found')
+
+    act(() => { statusCallback?.({ status: 'disconnected' }) })
+    expect(result.current.connectionStatus).toBe('not-found')
+  })
+
+  it('Yjs doc preserves local edits during disconnect (offline buffering)', () => {
+    const { result } = renderHook(() => useCollaboration('test-paste-id'))
+
+    // Simulate connected state
+    act(() => { statusCallback?.({ status: 'connected' }) })
+
+    // Insert text into the Yjs doc while "connected"
+    act(() => { result.current.ytext.insert(0, 'hello') })
+    expect(result.current.ytext.toString()).toBe('hello')
+
+    // Simulate disconnect — Yjs doc should still be editable
+    act(() => { statusCallback?.({ status: 'connecting' }) })
+    expect(result.current.connectionStatus).toBe('reconnecting')
+
+    // Edit while "disconnected" — local doc buffers edits
+    act(() => { result.current.ytext.insert(5, ' world') })
+    expect(result.current.ytext.toString()).toBe('hello world')
+
+    // Simulate reconnect — edits are still in the doc
+    act(() => { statusCallback?.({ status: 'connected' }) })
+    expect(result.current.connectionStatus).toBe('connected')
+    expect(result.current.ytext.toString()).toBe('hello world')
   })
 })

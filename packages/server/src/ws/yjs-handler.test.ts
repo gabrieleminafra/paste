@@ -347,6 +347,178 @@ describe("yjs-handler", () => {
     wsB.terminate();
   });
 
+  it("client reconnects after server restart and receives persisted state", async () => {
+    app = await buildApp({ logger: false });
+    const pasteId = await createPaste("restart test");
+
+    // Client connects and sends edits
+    const collector1 = createMessageCollector();
+    const ws1 = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collector1.onMessage); },
+    });
+    await drainInitialMessages(collector1);
+
+    const clientDoc1 = new Y.Doc();
+    clientDoc1.getText("content").insert(0, "persisted content");
+    const update = Y.encodeStateAsUpdate(clientDoc1);
+
+    const encoder1 = encoding.createEncoder();
+    encoding.writeVarUint(encoder1, MESSAGE_SYNC);
+    syncProtocol.writeUpdate(encoder1, update);
+    ws1.send(encoding.toUint8Array(encoder1));
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Client disconnects — server persists and cleans up in-memory doc
+    ws1.terminate();
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Client "reconnects" (simulating after server restart — doc must be loaded from DB)
+    const collector2 = createMessageCollector();
+    const ws2 = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collector2.onMessage); },
+    });
+
+    // Drain sync step 1
+    const msg1 = await collector2.nextMessage();
+    expect(decoding.readVarUint(decoding.createDecoder(new Uint8Array(msg1)))).toBe(MESSAGE_SYNC);
+
+    // Sync step 2 should contain the persisted content
+    const msg2 = await collector2.nextMessage();
+    const decoder2 = decoding.createDecoder(new Uint8Array(msg2));
+    expect(decoding.readVarUint(decoder2)).toBe(MESSAGE_SYNC);
+
+    // Apply to a fresh doc
+    const reconnectedDoc = new Y.Doc();
+    const respEncoder = encoding.createEncoder();
+    encoding.writeVarUint(respEncoder, MESSAGE_SYNC);
+    syncProtocol.readSyncMessage(decoder2, respEncoder, reconnectedDoc, null);
+
+    // Complete sync by sending sync step 1
+    const syncEncoder = encoding.createEncoder();
+    encoding.writeVarUint(syncEncoder, MESSAGE_SYNC);
+    syncProtocol.writeSyncStep1(syncEncoder, reconnectedDoc);
+    ws2.send(encoding.toUint8Array(syncEncoder));
+
+    try {
+      const msg3 = await collector2.nextMessage(1000);
+      const decoder3 = decoding.createDecoder(new Uint8Array(msg3));
+      const msgType = decoding.readVarUint(decoder3);
+      if (msgType === MESSAGE_SYNC) {
+        const respEncoder3 = encoding.createEncoder();
+        encoding.writeVarUint(respEncoder3, MESSAGE_SYNC);
+        syncProtocol.readSyncMessage(decoder3, respEncoder3, reconnectedDoc, null);
+      }
+    } catch {
+      // Timeout is fine
+    }
+
+    const content = reconnectedDoc.getText("content").toString();
+    expect(content).toContain("persisted content");
+
+    clientDoc1.destroy();
+    reconnectedDoc.destroy();
+    ws2.terminate();
+  });
+
+  it("reconnecting client receives missed edits from other clients", async () => {
+    app = await buildApp({ logger: false });
+    const pasteId = await createPaste("reconnect test");
+
+    // Client A connects and sends edits
+    const collectorA = createMessageCollector();
+    const wsA = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorA.onMessage); },
+    });
+    await drainInitialMessages(collectorA);
+
+    const clientDocA = new Y.Doc();
+    clientDocA.getText("content").insert(0, "from A");
+    const updateA = Y.encodeStateAsUpdate(clientDocA);
+
+    const encoderA = encoding.createEncoder();
+    encoding.writeVarUint(encoderA, MESSAGE_SYNC);
+    syncProtocol.writeUpdate(encoderA, updateA);
+    wsA.send(encoding.toUint8Array(encoderA));
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Client A disconnects
+    wsA.terminate();
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Client B connects and sends more edits
+    const collectorB = createMessageCollector();
+    const wsB = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorB.onMessage); },
+    });
+    await drainInitialMessages(collectorB);
+
+    const clientDocB = new Y.Doc();
+    // Apply A's edits first so B has the full state
+    Y.applyUpdate(clientDocB, updateA);
+    clientDocB.getText("content").insert(6, " and B");
+    const updateB = Y.encodeStateAsUpdate(clientDocB);
+
+    const encoderB = encoding.createEncoder();
+    encoding.writeVarUint(encoderB, MESSAGE_SYNC);
+    syncProtocol.writeUpdate(encoderB, updateB);
+    wsB.send(encoding.toUint8Array(encoderB));
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Client A "reconnects" — new WS connection, same paste
+    const collectorA2 = createMessageCollector();
+    const wsA2 = await app.injectWS("/ws/" + pasteId, undefined, {
+      onOpen: (socket) => { socket.on("message", collectorA2.onMessage); },
+    });
+
+    // Drain sync step 1
+    const msg1 = await collectorA2.nextMessage();
+    expect(decoding.readVarUint(decoding.createDecoder(new Uint8Array(msg1)))).toBe(MESSAGE_SYNC);
+
+    // Sync step 2 contains the full server state including both A's and B's edits
+    const msg2 = await collectorA2.nextMessage();
+    const decoder2 = decoding.createDecoder(new Uint8Array(msg2));
+    expect(decoding.readVarUint(decoder2)).toBe(MESSAGE_SYNC);
+
+    // Apply sync step 2 to a fresh client doc to verify it contains all edits
+    const reconnectedDoc = new Y.Doc();
+    const respEncoder = encoding.createEncoder();
+    encoding.writeVarUint(respEncoder, MESSAGE_SYNC);
+    syncProtocol.readSyncMessage(decoder2, respEncoder, reconnectedDoc, null);
+
+    // Send sync step 1 from reconnected client to get any remaining updates
+    const syncEncoder = encoding.createEncoder();
+    encoding.writeVarUint(syncEncoder, MESSAGE_SYNC);
+    syncProtocol.writeSyncStep1(syncEncoder, reconnectedDoc);
+    wsA2.send(encoding.toUint8Array(syncEncoder));
+
+    // Receive sync response
+    try {
+      const msg3 = await collectorA2.nextMessage(1000);
+      const decoder3 = decoding.createDecoder(new Uint8Array(msg3));
+      const msgType = decoding.readVarUint(decoder3);
+      if (msgType === MESSAGE_SYNC) {
+        const respEncoder3 = encoding.createEncoder();
+        encoding.writeVarUint(respEncoder3, MESSAGE_SYNC);
+        syncProtocol.readSyncMessage(decoder3, respEncoder3, reconnectedDoc, null);
+      }
+    } catch {
+      // Timeout is fine — all data may have been in step 2
+    }
+
+    const content = reconnectedDoc.getText("content").toString();
+    expect(content).toContain("from A");
+    expect(content).toContain("and B");
+
+    clientDocA.destroy();
+    clientDocB.destroy();
+    reconnectedDoc.destroy();
+    wsB.terminate();
+    wsA2.terminate();
+  });
+
   it("cleans up on connection close", async () => {
     app = await buildApp({ logger: false });
     const pasteId = await createPaste("cleanup test");

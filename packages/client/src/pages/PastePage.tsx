@@ -39,25 +39,6 @@ export default function PastePage() {
     )
   }
 
-  if (connectionStatus === 'disconnected') {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <PageHeader />
-        <main id="main-content" className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-lg text-muted mb-4">Connection lost</p>
-            <Link
-              to="/"
-              className="text-primary hover:text-primary-hover underline"
-            >
-              Create a new paste
-            </Link>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen">
       <PageHeader />
