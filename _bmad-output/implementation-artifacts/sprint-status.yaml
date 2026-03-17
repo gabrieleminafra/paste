@@ -51,8 +51,8 @@ development_status:
 
   # Epic 2: Real-Time Collaborative Editing
   epic-2: in-progress
-  2-1-real-time-document-sync-with-yjs-and-websocket: review
-  2-2-concurrent-multi-user-editing: backlog
+  2-1-real-time-document-sync-with-yjs-and-websocket: done
+  2-2-concurrent-multi-user-editing: review
   2-3-collaborator-cursor-presence: backlog
   epic-2-retrospective: optional
 

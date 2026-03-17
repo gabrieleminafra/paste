@@ -13,6 +13,8 @@ export interface CollaborationState {
   undoManager: Y.UndoManager
 }
 
+const CURSOR_COLORS = ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6', '#EAB308']
+
 export function useCollaboration(pasteId: string): CollaborationState {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting')
   const [connectedUsers, setConnectedUsers] = useState(0)
@@ -40,6 +42,13 @@ export function useCollaboration(pasteId: string): CollaborationState {
 
     provider.on('status', ({ status }: { status: string }) => {
       setConnectionStatus(status as ConnectionStatus)
+      if (status === 'connected') {
+        const colorIndex = doc.clientID % CURSOR_COLORS.length
+        awareness.setLocalStateField('user', {
+          color: CURSOR_COLORS[colorIndex],
+          colorLight: CURSOR_COLORS[colorIndex] + '33',
+        })
+      }
     })
 
     // Detect paste-not-found via WebSocket close code

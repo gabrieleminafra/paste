@@ -135,6 +135,23 @@ describe('PastePage', () => {
     expect(screen.getByText('Create a new paste')).toHaveAttribute('href', '/')
   })
 
+  it('renders without error when multiple users are connected', () => {
+    mockUseCollaboration.mockReturnValue({
+      ytext: {},
+      awareness: {},
+      connectionStatus: 'connected',
+      connectedUsers: 3,
+      undoManager: {},
+    })
+
+    renderWithRoute('abc123')
+
+    expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
+    expect(mockUseCollaboration).toHaveReturnedWith(
+      expect.objectContaining({ connectedUsers: 3 }),
+    )
+  })
+
   it('calls useCollaboration with the pasteId from route params', () => {
     mockUseCollaboration.mockReturnValue({
       ytext: {},

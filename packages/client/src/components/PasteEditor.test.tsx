@@ -28,8 +28,9 @@ vi.mock('@codemirror/view', () => {
   return { EditorView: MockView }
 })
 
+const mockYCollab = vi.fn().mockReturnValue([])
 vi.mock('y-codemirror.next', () => ({
-  yCollab: () => [],
+  yCollab: (...args: unknown[]) => mockYCollab(...args),
 }))
 
 import PasteEditor from './PasteEditor'
@@ -65,5 +66,16 @@ describe('PasteEditor', () => {
     const { unmount } = render(<PasteEditor {...createProps()} />)
     expect(screen.getByTestId('paste-editor')).toBeInTheDocument()
     unmount()
+  })
+
+  it('includes yCollab extension with ytext and awareness', () => {
+    const props = createProps()
+    render(<PasteEditor {...props} />)
+
+    expect(mockYCollab).toHaveBeenCalledWith(
+      props.ytext,
+      props.awareness,
+      expect.objectContaining({ undoManager: props.undoManager }),
+    )
   })
 })
