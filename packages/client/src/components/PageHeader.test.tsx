@@ -90,8 +90,7 @@ describe('PageHeader', () => {
 
       const newPasteLink = screen.getByText('New Paste')
       expect(newPasteLink.className).toContain('focus:ring-2')
-      expect(newPasteLink.className).toContain('focus:ring-blue-500')
-      expect(newPasteLink.className).toContain('focus:ring-offset-2')
+      expect(newPasteLink.className).toContain('focus:ring-primary/50')
       expect(newPasteLink.className).toContain('focus:outline-none')
     })
   })

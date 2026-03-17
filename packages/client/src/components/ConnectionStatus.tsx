@@ -15,10 +15,10 @@ export default function ConnectionStatus({ status }: ConnectionStatusProps) {
 
   const dotClasses =
     status === 'connected'
-      ? 'w-3 h-3 rounded-full bg-green-500'
+      ? 'w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]'
       : status === 'reconnecting'
-        ? 'w-3 h-3 rounded-full border-2 border-amber-500 motion-safe:animate-pulse'
-        : 'w-3 h-3 rounded-full bg-red-500'
+        ? 'w-3 h-3 rounded-full border-2 border-amber-400 motion-safe:animate-pulse'
+        : 'w-3 h-3 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]'
 
   return (
     <div aria-live="polite" className="fixed bottom-4 right-4 z-50 max-md:bottom-2 max-md:right-2">

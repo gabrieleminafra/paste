@@ -10,7 +10,7 @@ export default function CreateButton({ disabled, onClick, label = 'Create' }: Cr
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="rounded-md px-4 py-2 text-white font-medium transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none bg-primary hover:bg-primary-hover disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-300 max-lg:min-h-[44px] max-md:w-full"
+      className="rounded-lg px-6 py-2.5 text-sm text-white font-medium bg-primary hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(129,140,248,0.3)] disabled:bg-surface-border disabled:text-muted disabled:cursor-not-allowed disabled:hover:bg-surface-border disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-primary/50 max-lg:min-h-[44px] max-md:w-full"
     >
       {label}
     </button>

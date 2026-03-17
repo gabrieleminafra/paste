@@ -34,19 +34,17 @@ export default function PastePage() {
 
   if (connectionStatus === 'connecting') {
     return (
-      <div className="min-h-screen">
+      <div className="h-screen bg-bg flex flex-col">
         <PageHeader ref={shareLinkRef} />
-        <main id="main-content" className="flex items-start justify-center pt-12 px-4 max-md:px-2 max-md:pt-4">
-          <div className="w-full">
-            <div className="w-full min-h-[60vh] rounded-md bg-gray-50 p-4 space-y-3" data-testid="shimmer-skeleton">
-              <div className="shimmer-bar h-4 rounded w-full" />
-              <div className="shimmer-bar h-4 rounded w-[85%]" />
-              <div className="shimmer-bar h-4 rounded w-[92%]" />
-              <div className="shimmer-bar h-4 rounded w-[70%]" />
-              <div className="shimmer-bar h-4 rounded w-[95%]" />
-              <div className="shimmer-bar h-4 rounded w-[88%]" />
-              <div className="shimmer-bar h-4 rounded w-[76%]" />
-            </div>
+        <main id="main-content" className="flex-1 p-4 max-md:p-2">
+          <div className="h-full rounded-lg bg-surface border border-surface-border p-4 space-y-3" data-testid="shimmer-skeleton">
+            <div className="shimmer-bar h-4 rounded w-full" />
+            <div className="shimmer-bar h-4 rounded w-[85%]" />
+            <div className="shimmer-bar h-4 rounded w-[92%]" />
+            <div className="shimmer-bar h-4 rounded w-[70%]" />
+            <div className="shimmer-bar h-4 rounded w-[95%]" />
+            <div className="shimmer-bar h-4 rounded w-[88%]" />
+            <div className="shimmer-bar h-4 rounded w-[76%]" />
           </div>
         </main>
       </div>
@@ -55,14 +53,14 @@ export default function PastePage() {
 
   if (connectionStatus === 'not-found') {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="h-screen bg-bg flex flex-col">
         <PageHeader ref={shareLinkRef} />
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 max-md:px-2">
           <div className="text-center">
             <h2 className="text-lg text-muted mb-4">Paste not found</h2>
             <Link
               to="/"
-              className="text-primary hover:text-primary-hover underline rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 max-lg:min-h-[44px] max-lg:inline-flex max-lg:items-center max-lg:justify-center"
+              className="text-primary hover:text-primary-hover underline rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 max-lg:min-h-[44px] max-lg:inline-flex max-lg:items-center max-lg:justify-center"
             >
               Create a new paste
             </Link>
@@ -73,15 +71,13 @@ export default function PastePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="h-screen bg-bg flex flex-col">
       <PageHeader ref={shareLinkRef} />
       {showReconnectMsg && (
-        <div className="text-center text-sm text-muted py-2">Reconnecting...</div>
+        <div className="text-center text-sm text-muted py-1">Reconnecting...</div>
       )}
-      <main id="main-content" className="flex items-start justify-center pt-12 px-4 max-md:px-2 max-md:pt-4">
-        <div className="w-full">
-          <PasteEditor ytext={ytext} awareness={awareness} undoManager={undoManager} />
-        </div>
+      <main id="main-content" className="flex-1 p-4 max-md:p-2">
+        <PasteEditor ytext={ytext} awareness={awareness} undoManager={undoManager} />
       </main>
       <ConnectionStatus status={connectionStatus} />
     </div>

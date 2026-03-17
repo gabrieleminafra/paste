@@ -74,7 +74,7 @@ describe('PasteEditor', () => {
   it('applies correct CSS classes to container', () => {
     render(<PasteEditor {...createProps()} />)
     const container = screen.getByTestId('paste-editor')
-    expect(container).toHaveClass('w-full', 'min-h-[60vh]', 'border', 'border-border', 'rounded-md')
+    expect(container).toHaveClass('h-full', 'border', 'border-surface-border', 'rounded-lg')
   })
 
   it('mounts and unmounts without errors', () => {
@@ -119,8 +119,8 @@ describe('PasteEditor', () => {
     render(<PasteEditor {...createProps()} />)
     const container = screen.getByTestId('paste-editor')
     expect(container.className).toContain('focus-within:ring-2')
-    expect(container.className).toContain('focus-within:ring-blue-500')
-    expect(container.className).toContain('focus-within:ring-offset-2')
+    expect(container.className).toContain('focus-within:ring-primary/50')
+    expect(container.className).toContain('focus-within:border-primary')
   })
 
   it('has aria-label on editor container', () => {

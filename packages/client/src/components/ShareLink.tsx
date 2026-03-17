@@ -34,10 +34,10 @@ const ShareLink = forwardRef<ShareLinkHandle>(function ShareLink(_props, ref) {
 
   const buttonText = copyFailed ? 'Failed' : copied ? 'Copied!' : 'Copy'
   const buttonColor = copyFailed
-    ? 'text-red-600'
+    ? 'text-red-400 border-red-400/30'
     : copied
-      ? 'text-green-600'
-      : 'text-primary hover:bg-blue-50'
+      ? 'text-green-400 border-green-400/30'
+      : 'text-primary border-surface-border hover:bg-surface hover:border-primary/30'
 
   return (
     <div className="flex items-center gap-2">
@@ -46,13 +46,13 @@ const ShareLink = forwardRef<ShareLinkHandle>(function ShareLink(_props, ref) {
         readOnly
         value={window.location.href}
         aria-label="Shareable paste link"
-        className="font-mono text-sm bg-transparent border border-border rounded-md px-2 py-1 text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-w-0 flex-1"
+        className="font-mono text-sm bg-surface border border-surface-border rounded-lg px-2 py-1 text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary min-w-0 flex-1"
       />
       <button
         type="button"
         onClick={handleCopy}
         aria-label="Copy link to clipboard"
-        className={`bg-transparent border border-border rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap max-lg:min-h-[44px] max-lg:min-w-[44px] ${buttonColor}`}
+        className={`bg-transparent border rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 whitespace-nowrap max-lg:min-h-[44px] max-lg:min-w-[44px] ${buttonColor}`}
       >
         {buttonText}
       </button>

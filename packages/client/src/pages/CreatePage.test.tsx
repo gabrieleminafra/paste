@@ -42,7 +42,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Create Paste' })).toBeDisabled()
   })
 
   it('enables Create button when text is entered', () => {
@@ -56,7 +56,7 @@ describe('CreatePage', () => {
       target: { value: 'Hello world' },
     })
 
-    expect(screen.getByRole('button', { name: 'Create' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Create Paste' })).toBeEnabled()
   })
 
   it('keeps Create button disabled when only whitespace is entered', () => {
@@ -70,7 +70,7 @@ describe('CreatePage', () => {
       target: { value: '   ' },
     })
 
-    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Create Paste' })).toBeDisabled()
   })
 
   it('calls POST /api/pastes and navigates on success', async () => {
@@ -90,7 +90,7 @@ describe('CreatePage', () => {
       target: { value: 'Test content' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Paste' }))
 
     await vi.waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/pastes', {
@@ -126,7 +126,7 @@ describe('CreatePage', () => {
       target: { value: 'Test content' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Paste' }))
 
     await vi.waitFor(() => {
       expect(screen.getByText('Content is required')).toBeInTheDocument()
@@ -158,7 +158,7 @@ describe('CreatePage', () => {
     })
 
     // First attempt — fails
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Paste' }))
 
     await vi.waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument()
@@ -188,7 +188,7 @@ describe('CreatePage', () => {
       target: { value: 'Test content' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Paste' }))
 
     await vi.waitFor(() => {
       expect(screen.getByText('Failed to create paste')).toBeInTheDocument()
@@ -198,7 +198,7 @@ describe('CreatePage', () => {
 
   // Responsive layout tests (Story 4.1)
   describe('responsive layout', () => {
-    it('has desktop-first centered layout with max-w-800px', () => {
+    it('has centered layout with max-w-2xl container', () => {
       render(
         <MemoryRouter>
           <CreatePage />
@@ -207,9 +207,9 @@ describe('CreatePage', () => {
 
       const main = document.getElementById('main-content')
       expect(main?.className).toContain('justify-center')
-      expect(main?.className).toContain('px-4')
+      expect(main?.className).toContain('px-6')
 
-      const innerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.max-w-\\[800px\\]')
+      const innerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.max-w-2xl')
       expect(innerDiv).toBeInTheDocument()
     })
 
@@ -221,20 +221,8 @@ describe('CreatePage', () => {
       )
 
       const main = document.getElementById('main-content')
-      expect(main?.className).toContain('max-md:px-2')
-      expect(main?.className).toContain('max-md:pt-4')
-    })
-
-    it('applies tablet-specific padding classes', () => {
-      render(
-        <MemoryRouter>
-          <CreatePage />
-        </MemoryRouter>,
-      )
-
-      const main = document.getElementById('main-content')
-      expect(main?.className).toContain('max-lg:px-3')
-      expect(main?.className).toContain('max-lg:pt-8')
+      expect(main?.className).toContain('max-md:px-4')
+      expect(main?.className).toContain('max-md:py-6')
     })
 
     it('applies full-width class to Create button on mobile', () => {
@@ -244,7 +232,7 @@ describe('CreatePage', () => {
         </MemoryRouter>,
       )
 
-      const buttonContainer = screen.getByRole('button', { name: 'Create' }).parentElement
+      const buttonContainer = screen.getByRole('button', { name: 'Create Paste' }).closest('.flex.items-center.gap-3')
       expect(buttonContainer?.className).toContain('max-md:flex-col')
     })
 
@@ -256,7 +244,7 @@ describe('CreatePage', () => {
       )
 
       const textarea = screen.getByPlaceholderText('Paste your text here...')
-      expect(textarea.className).toContain('max-md:min-h-[40vh]')
+      expect(textarea.className).toContain('max-md:min-h-[240px]')
     })
   })
 

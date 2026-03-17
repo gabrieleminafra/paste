@@ -14,27 +14,27 @@ describe('ConnectionStatus', () => {
 
     const dot = screen.getByRole('status')
     expect(dot).toBeInTheDocument()
-    expect(dot.className).toContain('bg-green-500')
-    expect(dot.className).not.toContain('border-amber-500')
-    expect(dot.className).not.toContain('bg-red-500')
+    expect(dot.className).toContain('bg-emerald-400')
+    expect(dot.className).not.toContain('border-amber-400')
+    expect(dot.className).not.toContain('bg-red-400')
   })
 
   it('renders amber hollow ring when reconnecting', () => {
     render(<ConnectionStatus status="reconnecting" />)
 
     const dot = screen.getByRole('status')
-    expect(dot.className).toContain('border-amber-500')
-    expect(dot.className).not.toContain('bg-green-500')
-    expect(dot.className).not.toContain('bg-red-500')
+    expect(dot.className).toContain('border-amber-400')
+    expect(dot.className).not.toContain('bg-emerald-400')
+    expect(dot.className).not.toContain('bg-red-400')
   })
 
   it('renders red filled dot when disconnected', () => {
     render(<ConnectionStatus status="disconnected" />)
 
     const dot = screen.getByRole('status')
-    expect(dot.className).toContain('bg-red-500')
-    expect(dot.className).not.toContain('bg-green-500')
-    expect(dot.className).not.toContain('border-amber-500')
+    expect(dot.className).toContain('bg-red-400')
+    expect(dot.className).not.toContain('bg-emerald-400')
+    expect(dot.className).not.toContain('border-amber-400')
   })
 
   it('shows "Connected" tooltip when connected', () => {

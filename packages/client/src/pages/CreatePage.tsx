@@ -54,30 +54,39 @@ export default function CreatePage() {
   const isEmpty = content.trim().length === 0
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-bg flex flex-col">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:text-primary focus:underline"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface focus:px-4 focus:py-2 focus:text-primary focus:underline focus:rounded-md"
       >
         Skip to content
       </a>
-      <main id="main-content" className="flex items-start justify-center pt-12 px-4 max-lg:px-3 max-lg:pt-8 max-md:px-2 max-md:pt-4">
-        <div className="w-full max-w-[800px] flex flex-col gap-4">
+      <main id="main-content" className="flex-1 flex flex-col items-center justify-center px-6 py-8 max-md:px-4 max-md:py-6">
+        <div className="w-full max-w-2xl flex flex-col gap-5">
+          <div className="mb-2">
+            <h1 className="text-2xl font-semibold text-text tracking-tight max-md:text-xl">Pastebin</h1>
+            <p className="text-sm text-muted mt-1">Paste, share, collaborate in real-time.</p>
+          </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Paste your text here..."
-            className="w-full min-h-[60vh] max-md:min-h-[40vh] p-4 font-mono text-[#1A1A1A] bg-white border border-border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 placeholder:text-muted"
+            className="w-full min-h-[320px] max-md:min-h-[240px] p-4 font-mono text-sm text-text bg-surface border border-surface-border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted"
           />
-          <div className="flex items-center justify-end gap-3 max-md:flex-col max-md:items-stretch">
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
-            <CreateButton
-              disabled={isEmpty || isSubmitting}
-              onClick={handleCreate}
-              label={error ? 'Retry' : 'Create'}
-            />
+          <div className="flex items-center justify-between gap-3 max-md:flex-col max-md:items-stretch">
+            <p className="text-xs text-muted max-md:text-center">
+              {isEmpty ? '' : <><kbd className="px-1.5 py-0.5 bg-surface-border rounded text-[11px] font-mono">{navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter</kbd> to create</>}
+            </p>
+            <div className="flex items-center gap-3 max-md:flex-col max-md:items-stretch">
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
+              <CreateButton
+                disabled={isEmpty || isSubmitting}
+                onClick={handleCreate}
+                label={error ? 'Retry' : 'Create Paste'}
+              />
+            </div>
           </div>
         </div>
       </main>

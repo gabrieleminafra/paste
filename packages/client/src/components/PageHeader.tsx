@@ -5,10 +5,10 @@ import type { ShareLinkHandle } from './ShareLink'
 
 const PageHeader = forwardRef<ShareLinkHandle>(function PageHeader(_props, ref) {
   return (
-    <header className="flex items-center justify-between px-4 py-2 border-b border-border">
+    <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2 border-b border-surface-border bg-bg/80 backdrop-blur-md">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:text-primary focus:underline"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface focus:px-4 focus:py-2 focus:text-primary focus:underline focus:rounded-md"
       >
         Skip to content
       </a>
@@ -17,7 +17,7 @@ const PageHeader = forwardRef<ShareLinkHandle>(function PageHeader(_props, ref) 
       </div>
       <Link
         to="/"
-        className="text-primary hover:underline text-sm whitespace-nowrap transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md max-lg:min-h-[44px] max-lg:min-w-[44px] max-lg:flex max-lg:items-center max-lg:justify-center"
+        className="text-primary hover:text-primary-hover text-sm whitespace-nowrap rounded-md px-3 py-1.5 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/50 max-lg:min-h-[44px] max-lg:min-w-[44px] max-lg:flex max-lg:items-center max-lg:justify-center"
       >
         New Paste
       </Link>

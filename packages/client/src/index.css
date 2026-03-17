@@ -1,10 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-muted: #6B7280;
-  --color-border: #E5E7EB;
+  --color-primary: #818CF8;
+  --color-primary-hover: #A5B4FC;
+  --color-primary-glow: rgba(129, 140, 248, 0.25);
+  --color-surface: #1E293B;
+  --color-surface-hover: #263548;
+  --color-surface-border: #334155;
+  --color-muted: #94A3B8;
+  --color-border: #334155;
+  --color-bg: #0F172A;
+  --color-text: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -12,8 +19,19 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  color: #1A1A1A;
-  background: #FFFFFF;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+* {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary);
 }
 
 @keyframes shimmer {
@@ -22,12 +40,20 @@ body {
 }
 
 .shimmer-bar {
-  background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+@keyframes subtle-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(129, 140, 248, 0.1); }
+  50% { box-shadow: 0 0 25px rgba(129, 140, 248, 0.2); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+  }
   .animate-pulse {
     animation: none;
   }
