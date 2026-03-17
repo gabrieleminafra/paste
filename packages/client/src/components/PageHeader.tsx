@@ -15,7 +15,7 @@ export default function PageHeader() {
       </div>
       <Link
         to="/"
-        className="text-primary hover:underline text-sm whitespace-nowrap transition-colors duration-150"
+        className="text-primary hover:underline text-sm whitespace-nowrap transition-colors duration-150 max-lg:min-h-[44px] max-lg:min-w-[44px] max-lg:flex max-lg:items-center max-lg:justify-center"
       >
         New Paste
       </Link>

@@ -86,6 +86,17 @@ describe('ConnectionStatus', () => {
     )
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('has reduced positioning on mobile to avoid content overlap', () => {
+      const { container } = render(<ConnectionStatus status="connected" />)
+
+      const wrapper = container.querySelector('[aria-live="polite"]')
+      expect(wrapper?.className).toContain('max-md:bottom-2')
+      expect(wrapper?.className).toContain('max-md:right-2')
+    })
+  })
+
   it('applies motion-safe:animate-pulse only for reconnecting state', () => {
     const { rerender } = render(<ConnectionStatus status="reconnecting" />)
 

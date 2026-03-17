@@ -310,6 +310,106 @@ describe('PastePage', () => {
     vi.useRealTimers()
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('uses full-width layout without max-w-800px constraint on desktop', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('px-4')
+      // Should NOT have max-w-[800px] on the editor wrapper
+      const editorWrapper = screen.getByTestId('paste-editor').parentElement
+      expect(editorWrapper?.className).not.toContain('max-w-[800px]')
+      expect(editorWrapper?.className).toContain('w-full')
+    })
+
+    it('applies mobile padding to main content area', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connected',
+        connectedUsers: 1,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('max-md:px-2')
+      expect(main?.className).toContain('max-md:pt-4')
+    })
+
+    it('applies mobile padding to skeleton loading state', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connecting',
+        connectedUsers: 0,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('max-md:px-2')
+      expect(main?.className).toContain('max-md:pt-4')
+    })
+
+    it('applies mobile padding to not-found state', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'not-found',
+        connectedUsers: 0,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const main = document.getElementById('main-content')
+      expect(main?.className).toContain('max-md:px-2')
+    })
+
+    it('not-found "Create a new paste" link has touch target on tablet/mobile', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'not-found',
+        connectedUsers: 0,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const createLink = screen.getByText('Create a new paste')
+      expect(createLink.className).toContain('max-lg:min-h-[44px]')
+    })
+
+    it('skeleton loader uses full-width without max-w-800px', () => {
+      mockUseCollaboration.mockReturnValue({
+        ytext: {},
+        awareness: {},
+        connectionStatus: 'connecting',
+        connectedUsers: 0,
+        undoManager: {},
+      })
+
+      renderWithRoute('abc123')
+
+      const skeletonWrapper = document.querySelector('.animate-pulse')?.parentElement
+      expect(skeletonWrapper?.className).not.toContain('max-w-[800px]')
+      expect(skeletonWrapper?.className).toContain('w-full')
+    })
+  })
+
   it('hides "Reconnecting..." message when status returns to connected', () => {
     vi.useFakeTimers()
 

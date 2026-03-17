@@ -135,6 +135,70 @@ describe('CreatePage', () => {
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('has desktop-first centered layout with max-w-800px', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
+      expect(outerDiv?.className).toContain('justify-center')
+      expect(outerDiv?.className).toContain('px-4')
+
+      const innerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.max-w-\\[800px\\]')
+      expect(innerDiv).toBeInTheDocument()
+    })
+
+    it('applies mobile-specific padding classes', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
+      expect(outerDiv?.className).toContain('max-md:px-2')
+      expect(outerDiv?.className).toContain('max-md:pt-4')
+    })
+
+    it('applies tablet-specific padding classes', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const outerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.min-h-screen')
+      expect(outerDiv?.className).toContain('max-lg:px-3')
+      expect(outerDiv?.className).toContain('max-lg:pt-8')
+    })
+
+    it('applies full-width class to Create button on mobile', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const buttonContainer = screen.getByRole('button', { name: 'Create' }).parentElement
+      expect(buttonContainer?.className).toContain('max-md:flex-col')
+    })
+
+    it('applies mobile min-height reduction to textarea', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const textarea = screen.getByPlaceholderText('Paste your text here...')
+      expect(textarea.className).toContain('max-md:min-h-[40vh]')
+    })
+  })
+
   it('triggers create on Cmd/Ctrl+Enter', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,

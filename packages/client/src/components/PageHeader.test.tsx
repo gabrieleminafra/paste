@@ -55,6 +55,26 @@ describe('PageHeader', () => {
     expect(newPasteLink).toHaveAttribute('href', '/')
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('New Paste link has 44px touch target on tablet/mobile', () => {
+      renderPageHeader()
+
+      const newPasteLink = screen.getByText('New Paste')
+      expect(newPasteLink.className).toContain('max-lg:min-h-[44px]')
+      expect(newPasteLink.className).toContain('max-lg:min-w-[44px]')
+    })
+
+    it('New Paste link has flex alignment for touch target', () => {
+      renderPageHeader()
+
+      const newPasteLink = screen.getByText('New Paste')
+      expect(newPasteLink.className).toContain('max-lg:flex')
+      expect(newPasteLink.className).toContain('max-lg:items-center')
+      expect(newPasteLink.className).toContain('max-lg:justify-center')
+    })
+  })
+
   it('has skip-to-content link with href="#main-content"', () => {
     renderPageHeader()
 

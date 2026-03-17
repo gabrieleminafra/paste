@@ -46,7 +46,7 @@ export default function ShareLink() {
         type="button"
         onClick={handleCopy}
         aria-label="Copy link to clipboard"
-        className={`bg-transparent border border-border rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap ${buttonColor}`}
+        className={`bg-transparent border border-border rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap max-lg:min-h-[44px] max-lg:min-w-[44px] ${buttonColor}`}
       >
         {buttonText}
       </button>

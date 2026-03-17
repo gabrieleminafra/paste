@@ -37,6 +37,23 @@ describe('CreateButton', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('has 44px min touch target on tablet/mobile', () => {
+      render(<CreateButton disabled={false} onClick={() => {}} />)
+
+      const button = screen.getByRole('button')
+      expect(button.className).toContain('max-lg:min-h-[44px]')
+    })
+
+    it('has full-width class on mobile', () => {
+      render(<CreateButton disabled={false} onClick={() => {}} />)
+
+      const button = screen.getByRole('button')
+      expect(button.className).toContain('max-md:w-full')
+    })
+  })
+
   it('does not call onClick when disabled', () => {
     const onClick = vi.fn()
     render(<CreateButton disabled={true} onClick={onClick} />)

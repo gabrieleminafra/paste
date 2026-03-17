@@ -93,6 +93,24 @@ describe('ShareLink', () => {
     expect(copyButton).toHaveTextContent('Copy')
   })
 
+  // Responsive layout tests (Story 4.1)
+  describe('responsive layout', () => {
+    it('Copy button has 44px touch target on tablet/mobile', () => {
+      renderShareLink()
+
+      const copyButton = screen.getByLabelText('Copy link to clipboard')
+      expect(copyButton.className).toContain('max-lg:min-h-[44px]')
+      expect(copyButton.className).toContain('max-lg:min-w-[44px]')
+    })
+
+    it('URL input has overflow handling for mobile', () => {
+      renderShareLink()
+
+      const urlInput = screen.getByLabelText('Shareable paste link')
+      expect(urlInput.className).toContain('min-w-0')
+    })
+  })
+
   it('handles clipboard write failure gracefully', async () => {
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockRejectedValue(new Error('Permission denied')) },

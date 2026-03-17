@@ -21,7 +21,7 @@ export default function ConnectionStatus({ status }: ConnectionStatusProps) {
         : 'w-3 h-3 rounded-full bg-red-500'
 
   return (
-    <div aria-live="polite" className="fixed bottom-4 right-4 z-50">
+    <div aria-live="polite" className="fixed bottom-4 right-4 z-50 max-md:bottom-2 max-md:right-2">
       <div
         role="status"
         aria-label={`Connection status: ${statusText}`}
