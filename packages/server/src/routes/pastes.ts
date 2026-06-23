@@ -1,14 +1,13 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ApiResponse } from "shared";
-import { nanoid } from "nanoid";
 import * as Y from "yjs";
 import { eq } from "drizzle-orm";
 import { createDbClient } from "../db/client.js";
 import { pastes } from "../db/schema.js";
 import { loadYjsDoc } from "../ws/yjs-utils.js";
+import { ID_PATTERN, withUniqueId } from "../ids/generate.js";
 
 const MAX_CONTENT_SIZE = 1_048_576; // 1MB
-export const NANOID_PATTERN = /^[A-Za-z0-9_-]{21}$/;
 
 export const pasteRoutes: FastifyPluginAsync = async (app) => {
   const { db, sql } = createDbClient(app.config.DATABASE_URL);
@@ -56,18 +55,18 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
         return reply.status(400).send(response);
       }
 
-      const id = nanoid();
-
       // Store as Yjs binary state so document-manager can load it
       const doc = new Y.Doc();
       doc.getText("content").insert(0, content);
       const yState = Y.encodeStateAsUpdate(doc);
       doc.destroy();
 
-      await db.insert(pastes).values({
-        id,
-        content: Buffer.from(yState),
-      });
+      const id = await withUniqueId((candidate) =>
+        db.insert(pastes).values({
+          id: candidate,
+          content: Buffer.from(yState),
+        }),
+      );
 
       request.log.info(
         { event: "paste.created", pasteId: id, size: contentBytes.length },
@@ -95,7 +94,7 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
     async (request, reply) => {
       const { id } = request.params;
 
-      if (!NANOID_PATTERN.test(id)) {
+      if (!ID_PATTERN.test(id)) {
         const response: ApiResponse<never> = {
           data: null,
           error: { message: "Paste not found", code: "PASTE_NOT_FOUND" },

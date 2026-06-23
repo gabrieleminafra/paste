@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile as fsWriteFile, readFile } from "node:fs/promise
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { inArray, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { generateId } from "../ids/generate.js";
 import type { FastifyBaseLogger } from "fastify";
 import { createDbClient } from "../db/client.js";
 import { pastes, files } from "../db/schema.js";
@@ -25,10 +25,10 @@ describe("runCleanup", () => {
   let uploadDir: string;
 
   // Distinct ids so the suite never collides with other data.
-  const expiredPaste = nanoid();
-  const freshPaste = nanoid();
-  const expiredFile = nanoid();
-  const freshFile = nanoid();
+  const expiredPaste = generateId();
+  const freshPaste = generateId();
+  const expiredFile = generateId();
+  const freshFile = generateId();
 
   beforeAll(async () => {
     ({ db, sql } = createDbClient(process.env.DATABASE_URL!));

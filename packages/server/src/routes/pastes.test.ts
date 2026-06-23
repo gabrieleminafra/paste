@@ -25,7 +25,8 @@ describe("paste routes", () => {
       expect(body.data).toBeDefined();
       expect(body.data.id).toBeDefined();
       expect(typeof body.data.id).toBe("string");
-      expect(body.data.id.length).toBe(21);
+      // Human-readable id: 4 lowercase words joined by hyphens.
+      expect(body.data.id).toMatch(/^[a-z]+(-[a-z]+){3}$/);
     });
 
     it("returns 400 when content is missing", async () => {
@@ -138,7 +139,7 @@ describe("paste routes", () => {
 
       const response = await app.inject({
         method: "GET",
-        url: "/api/pastes/abcdefghijklmnopqrstu", // valid 21-char nanoid format, but not in DB
+        url: "/api/pastes/moon-cat-river-fox", // valid word-id format, but not in DB
       });
 
       expect(response.statusCode).toBe(404);

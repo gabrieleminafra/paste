@@ -6,7 +6,7 @@ import * as awarenessProtocol from "y-protocols/awareness";
 import * as encoding from "lib0/encoding";
 import * as decoding from "lib0/decoding";
 import { createDbClient } from "../db/client.js";
-import { NANOID_PATTERN } from "../routes/pastes.js";
+import { ID_PATTERN } from "../ids/generate.js";
 import { DocumentManager } from "./document-manager.js";
 
 const MESSAGE_SYNC = 0;
@@ -27,7 +27,7 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
     async (socket: WsWebSocket, request) => {
       const { pasteId } = request.params as { pasteId: string };
 
-      if (!NANOID_PATTERN.test(pasteId)) {
+      if (!ID_PATTERN.test(pasteId)) {
         request.log.warn(
           { event: "ws.rejected", pasteId, reason: "invalid_id" },
           "WebSocket rejected: invalid paste ID",

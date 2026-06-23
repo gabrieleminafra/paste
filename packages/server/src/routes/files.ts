@@ -2,17 +2,17 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import type { FastifyPluginAsync } from "fastify";
 import type { ApiResponse, FileMeta } from "shared";
-import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { createDbClient } from "../db/client.js";
 import { files } from "../db/schema.js";
 import {
+  commitFile,
   deleteFile,
   ensureUploadDir,
   getFilePath,
-  writeFile,
+  writeTempFile,
 } from "../files/storage.js";
-import { NANOID_PATTERN } from "./pastes.js";
+import { ID_PATTERN, withUniqueId } from "../ids/generate.js";
 
 export const MAX_FILE_SIZE = 52_428_800; // 50MB
 const MAX_FILENAME_LENGTH = 255;
@@ -74,13 +74,14 @@ export const fileRoutes: FastifyPluginAsync = async (app) => {
         return reply.status(400).send(missingFile);
       }
 
-      const id = nanoid();
-      const size = await writeFile(uploadDir, id, data.file);
+      // Stream to a temp file first; the id is reserved in the DB before the
+      // blob is committed to its final name (see writeTempFile).
+      const { tempName, size } = await writeTempFile(uploadDir, data.file);
 
       // @fastify/multipart flags the stream as truncated when it exceeds the
       // configured fileSize limit; the partial write is discarded.
       if (data.file.truncated) {
-        await deleteFile(uploadDir, id);
+        await deleteFile(uploadDir, tempName);
         request.log.warn(
           { event: "file.rejected", reason: "too_large" },
           "File upload rejected: exceeds 50MB limit",
@@ -98,7 +99,16 @@ export const fileRoutes: FastifyPluginAsync = async (app) => {
       const filename = (data.filename || "file").slice(0, MAX_FILENAME_LENGTH);
       const mimeType = data.mimetype || "application/octet-stream";
 
-      await db.insert(files).values({ id, filename, mimeType, size });
+      let id: string;
+      try {
+        id = await withUniqueId((candidate) =>
+          db.insert(files).values({ id: candidate, filename, mimeType, size }),
+        );
+        await commitFile(uploadDir, tempName, id);
+      } catch (err) {
+        await deleteFile(uploadDir, tempName);
+        throw err;
+      }
 
       request.log.info(
         { event: "file.uploaded", fileId: id, filename, mimeType, size },
@@ -126,7 +136,7 @@ export const fileRoutes: FastifyPluginAsync = async (app) => {
     async (request, reply) => {
       const { id } = request.params;
 
-      if (!NANOID_PATTERN.test(id)) {
+      if (!ID_PATTERN.test(id)) {
         const response: ApiResponse<never> = {
           data: null,
           error: { message: "File not found", code: "FILE_NOT_FOUND" },
@@ -182,7 +192,7 @@ export const fileRoutes: FastifyPluginAsync = async (app) => {
         error: { message: "File not found", code: "FILE_NOT_FOUND" },
       };
 
-      if (!NANOID_PATTERN.test(id)) {
+      if (!ID_PATTERN.test(id)) {
         return reply.status(404).send(notFound);
       }
 

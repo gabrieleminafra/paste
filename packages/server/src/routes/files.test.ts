@@ -28,12 +28,12 @@ describe("file routes", () => {
   });
 
   describe("GET /api/files/:id", () => {
-    it("returns 404 for an id that fails the nanoid pattern", async () => {
+    it("returns 404 for an id with an invalid format", async () => {
       app = await buildApp({ logger: false });
 
       const response = await app.inject({
         method: "GET",
-        url: "/api/files/not-a-valid-id",
+        url: "/api/files/short", // not 4 hyphen-joined words
       });
 
       expect(response.statusCode).toBe(404);
@@ -44,7 +44,7 @@ describe("file routes", () => {
   });
 
   describe("GET /api/files/:id/download", () => {
-    it("returns 404 for an id that fails the nanoid pattern", async () => {
+    it("returns 404 for an id with an invalid format", async () => {
       app = await buildApp({ logger: false });
 
       const response = await app.inject({

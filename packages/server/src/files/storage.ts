@@ -1,5 +1,6 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, rm, stat } from "node:fs/promises";
+import { mkdir, rm, stat, rename } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { Readable } from "node:stream";
@@ -12,38 +13,51 @@ export async function ensureUploadDir(uploadDir: string): Promise<void> {
 }
 
 /**
- * Absolute path on disk for a given file id. The id is a nanoid (validated by
- * the route layer) so it is always a safe, flat filename with no separators.
+ * Absolute path on disk for a given file id. The id is validated by the route
+ * layer (hyphen-joined words) so it is always a safe, flat filename.
  */
 export function getFilePath(uploadDir: string, id: string): string {
   return path.join(uploadDir, id);
 }
 
 /**
- * Streams an uploaded file part to disk. Returns the number of bytes written.
- * On any failure the partial file is removed so the directory never retains
- * truncated uploads.
+ * Streams an uploaded file part to a randomly named temp file and returns its
+ * name and byte size. Writing to a temp name (rather than straight to the id)
+ * lets the caller reserve a unique id in the database before committing the
+ * blob — so a colliding id can never clobber an existing file. On failure the
+ * partial temp file is removed.
  */
-export async function writeFile(
+export async function writeTempFile(
   uploadDir: string,
-  id: string,
   source: Readable,
-): Promise<number> {
-  const destPath = getFilePath(uploadDir, id);
+): Promise<{ tempName: string; size: number }> {
+  const tempName = `.tmp-${randomBytes(12).toString("hex")}`;
+  const destPath = path.join(uploadDir, tempName);
   try {
     await pipeline(source, createWriteStream(destPath));
     const { size } = await stat(destPath);
-    return size;
+    return { tempName, size };
   } catch (err) {
-    await deleteFile(uploadDir, id);
+    await rm(destPath, { force: true });
     throw err;
   }
 }
 
 /**
- * Removes a stored file. Missing files are ignored so callers can use this for
- * best-effort cleanup.
+ * Atomically moves a temp file to its final id-keyed location.
  */
-export async function deleteFile(uploadDir: string, id: string): Promise<void> {
-  await rm(getFilePath(uploadDir, id), { force: true });
+export async function commitFile(
+  uploadDir: string,
+  tempName: string,
+  id: string,
+): Promise<void> {
+  await rename(path.join(uploadDir, tempName), getFilePath(uploadDir, id));
+}
+
+/**
+ * Removes a stored file (or temp file) by name. Missing files are ignored so
+ * callers can use this for best-effort cleanup.
+ */
+export async function deleteFile(uploadDir: string, name: string): Promise<void> {
+  await rm(path.join(uploadDir, name), { force: true });
 }
