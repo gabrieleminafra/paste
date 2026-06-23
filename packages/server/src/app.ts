@@ -12,6 +12,7 @@ import { healthRoutes } from "./routes/health.js";
 import { pasteRoutes } from "./routes/pastes.js";
 import { fileRoutes, MAX_FILE_SIZE } from "./routes/files.js";
 import { yjsHandler } from "./ws/yjs-handler.js";
+import { cleanupPlugin } from "./cleanup/cleanup.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,7 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   app.register(pasteRoutes);
   app.register(fileRoutes);
   app.register(yjsHandler);
+  app.register(cleanupPlugin);
 
   const serveStatic = process.env.NODE_ENV === "production";
 

@@ -32,6 +32,15 @@ export const envSchema: FastifyEnvOptions = {
         default: "info",
         enum: ["fatal", "error", "warn", "info", "debug", "trace", "silent"],
       },
+      // Retention windows, in days, after which content is considered expired.
+      PASTE_TTL_DAYS: {
+        type: "number",
+        default: 30,
+      },
+      FILE_TTL_DAYS: {
+        type: "number",
+        default: 7,
+      },
     },
   },
 };
@@ -44,6 +53,8 @@ declare module "fastify" {
       NODE_ENV: string;
       UPLOAD_DIR: string;
       LOG_LEVEL: string;
+      PASTE_TTL_DAYS: number;
+      FILE_TTL_DAYS: number;
     };
   }
 }
