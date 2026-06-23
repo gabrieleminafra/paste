@@ -32,7 +32,7 @@ const ShareLink = forwardRef<ShareLinkHandle>(function ShareLink(_props, ref) {
 
   useImperativeHandle(ref, () => ({ triggerCopy: handleCopy }), [])
 
-  const buttonText = copyFailed ? 'Failed' : copied ? 'Copied!' : 'Copy'
+  const buttonText = copyFailed ? 'Failed' : copied ? 'Copied!' : 'Copy link'
   const buttonColor = copyFailed
     ? 'text-red-400 border-red-400/30'
     : copied
@@ -46,13 +46,13 @@ const ShareLink = forwardRef<ShareLinkHandle>(function ShareLink(_props, ref) {
         readOnly
         value={window.location.href}
         aria-label="Shareable paste link"
-        className="font-mono text-sm bg-surface border border-surface-border rounded-lg px-2 py-1 text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary min-w-0 flex-1"
+        className="font-mono text-sm bg-surface border border-surface-border rounded-lg px-2 py-1 text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary min-w-0 flex-1 max-md:hidden"
       />
       <button
         type="button"
         onClick={handleCopy}
         aria-label="Copy link to clipboard"
-        className={`bg-transparent border rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 whitespace-nowrap max-lg:min-h-[44px] max-lg:min-w-[44px] ${buttonColor}`}
+        className={`bg-transparent border rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 whitespace-nowrap max-lg:min-h-[44px] max-lg:min-w-[44px] max-md:flex-1 ${buttonColor}`}
       >
         {buttonText}
       </button>
