@@ -9,6 +9,7 @@ import multipart from "@fastify/multipart";
 import type { ApiResponse, ErrorCode } from "shared";
 import { envSchema } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
+import { configRoutes } from "./routes/config.js";
 import { pasteRoutes } from "./routes/pastes.js";
 import { fileRoutes, MAX_FILE_SIZE } from "./routes/files.js";
 import { yjsHandler } from "./ws/yjs-handler.js";
@@ -41,6 +42,7 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   });
 
   app.register(healthRoutes);
+  app.register(configRoutes);
   app.register(pasteRoutes);
   app.register(fileRoutes);
   app.register(yjsHandler);

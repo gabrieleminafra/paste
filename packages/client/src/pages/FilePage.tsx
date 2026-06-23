@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router'
 import PageHeader from '../components/PageHeader'
 import type { ShareLinkHandle } from '../components/ShareLink'
 import type { FileMeta } from 'shared'
+import { useAppConfig } from '../context/AppConfig'
+import { expiryLabel } from '../lib/ttl'
 
 type Status = 'loading' | 'ready' | 'not-found'
 
@@ -18,11 +20,22 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`
 }
 
+function fileGlyph(mimeType: string): string {
+  if (mimeType.startsWith('image/')) return '🖼️'
+  if (mimeType.startsWith('video/')) return '🎬'
+  if (mimeType.startsWith('audio/')) return '🎵'
+  if (mimeType === 'application/pdf') return '📄'
+  if (/zip|tar|rar|7z|compressed|gzip/.test(mimeType)) return '🗜️'
+  if (mimeType.startsWith('text/') || /json|xml|javascript/.test(mimeType)) return '📝'
+  return '📦'
+}
+
 export default function FilePage() {
   const { fileId } = useParams<{ fileId: string }>()
   const [status, setStatus] = useState<Status>('loading')
   const [meta, setMeta] = useState<FileMeta | null>(null)
   const shareLinkRef = useRef<ShareLinkHandle>(null)
+  const config = useAppConfig()
 
   useEffect(() => {
     let cancelled = false
@@ -83,11 +96,29 @@ export default function FilePage() {
     )
   }
 
+  const downloadUrl = `/api/files/${meta.id}/download`
+  const isImage = meta.mimeType.startsWith('image/')
+  const expiry = config ? expiryLabel(meta.createdAt, config.fileTtlDays) : null
+
   return (
     <div className="h-screen bg-bg flex flex-col">
       <PageHeader ref={shareLinkRef} />
       <main id="main-content" className="flex-1 flex items-center justify-center px-6 py-8 max-md:px-4">
         <div className="w-full max-w-md flex flex-col gap-5 rounded-lg bg-surface border border-surface-border p-6">
+          {isImage ? (
+            <img
+              src={downloadUrl}
+              alt={meta.filename}
+              className="w-full max-h-64 object-contain rounded-md bg-bg border border-surface-border"
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center h-24 rounded-md bg-bg border border-surface-border text-4xl"
+              aria-hidden="true"
+            >
+              {fileGlyph(meta.mimeType)}
+            </div>
+          )}
           <div className="min-w-0">
             <h1 className="text-lg font-semibold text-text break-all" title={meta.filename}>
               {meta.filename}
@@ -95,9 +126,10 @@ export default function FilePage() {
             <p className="text-sm text-muted mt-1">
               {formatBytes(meta.size)} &middot; {meta.mimeType}
             </p>
+            {expiry && <p className="text-xs text-muted mt-1">{expiry}</p>}
           </div>
           <a
-            href={`/api/files/${meta.id}/download`}
+            href={downloadUrl}
             download={meta.filename}
             className="inline-flex items-center justify-center bg-primary text-bg font-medium rounded-lg px-4 py-2.5 hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/50 max-lg:min-h-[44px]"
           >

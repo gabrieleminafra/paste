@@ -60,6 +60,34 @@ describe('FilePage', () => {
     expect(download).toHaveAttribute('download', 'report.pdf')
   })
 
+  it('renders an inline preview for image files', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: {
+              id: 'abcdefghijklmnopqrstu',
+              filename: 'photo.png',
+              mimeType: 'image/png',
+              size: 4096,
+              createdAt: '2026-06-23T00:00:00.000Z',
+              updatedAt: '2026-06-23T00:00:00.000Z',
+            },
+            error: null,
+          }),
+      }),
+    )
+
+    renderFilePage()
+
+    const img = (await screen.findByAltText('photo.png')) as HTMLImageElement
+    expect(img.getAttribute('src')).toBe(
+      '/api/files/abcdefghijklmnopqrstu/download',
+    )
+  })
+
   it('shows a not-found message when the file is missing', async () => {
     vi.stubGlobal(
       'fetch',

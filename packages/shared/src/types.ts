@@ -32,3 +32,8 @@ export interface FileMeta {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AppConfig {
+  pasteTtlDays: number;
+  fileTtlDays: number;
+}

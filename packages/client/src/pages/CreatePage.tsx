@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import CreateButton from '../components/CreateButton'
+import { useAppConfig } from '../context/AppConfig'
 
 const MAX_FILE_SIZE = 52_428_800 // 50MB, mirrors the server limit
 
@@ -14,6 +15,7 @@ export default function CreatePage() {
   const dragDepthRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+  const config = useAppConfig()
 
   const handleCreate = useCallback(async () => {
     if (!content.trim() || submittingRef.current) return
@@ -178,7 +180,7 @@ export default function CreatePage() {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Paste your text here, or drop a file anywhere..."
             disabled={isSubmitting}
-            className="w-full min-h-[320px] max-md:min-h-[240px] p-4 font-mono text-sm text-text bg-surface border border-surface-border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted disabled:opacity-60"
+            className={`w-full min-h-[320px] max-md:min-h-[240px] p-4 font-mono text-sm text-text bg-surface border border-surface-border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted disabled:opacity-60 ${isEmpty ? 'border-dashed' : ''}`}
           />
           {uploadProgress !== null && (
             <div className="flex flex-col gap-1">
@@ -226,6 +228,12 @@ export default function CreatePage() {
               />
             </div>
           </div>
+          {config && (
+            <p className="text-xs text-muted text-center">
+              Pastes are kept for {config.pasteTtlDays} days &middot; files for{' '}
+              {config.fileTtlDays} days
+            </p>
+          )}
           <input
             ref={fileInputRef}
             type="file"

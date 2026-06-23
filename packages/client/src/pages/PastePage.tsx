@@ -5,12 +5,14 @@ import PasteEditor from '../components/PasteEditor'
 import ConnectionStatus from '../components/ConnectionStatus'
 import { useCollaboration } from '../hooks/useCollaboration'
 import type { ShareLinkHandle } from '../components/ShareLink'
+import { useAppConfig } from '../context/AppConfig'
 
 export default function PastePage() {
   const { pasteId } = useParams<{ pasteId: string }>()
   const { ytext, awareness, connectionStatus, undoManager } = useCollaboration(pasteId!)
   const [showReconnectMsg, setShowReconnectMsg] = useState(false)
   const shareLinkRef = useRef<ShareLinkHandle>(null)
+  const config = useAppConfig()
 
   const handleCopyShortcut = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
@@ -79,6 +81,11 @@ export default function PastePage() {
       <main id="main-content" className="flex-1 p-4 max-md:p-2">
         <PasteEditor ytext={ytext} awareness={awareness} undoManager={undoManager} />
       </main>
+      {config && (
+        <p className="text-center text-xs text-muted py-1">
+          Kept for {config.pasteTtlDays} days after the last edit
+        </p>
+      )}
       <ConnectionStatus status={connectionStatus} />
     </div>
   )
