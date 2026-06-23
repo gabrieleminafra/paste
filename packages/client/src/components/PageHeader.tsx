@@ -1,6 +1,7 @@
 import { forwardRef } from 'react'
 import { Link } from 'react-router'
 import ShareLink from './ShareLink'
+import QrCode from './QrCode'
 import type { ShareLinkHandle } from './ShareLink'
 
 const PageHeader = forwardRef<ShareLinkHandle>(function PageHeader(_props, ref) {
@@ -14,6 +15,9 @@ const PageHeader = forwardRef<ShareLinkHandle>(function PageHeader(_props, ref) 
       </a>
       <div className="flex-1 min-w-0 mr-4">
         <ShareLink ref={ref} />
+      </div>
+      <div className="mr-2">
+        <QrCode />
       </div>
       <Link
         to="/"

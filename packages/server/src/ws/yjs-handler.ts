@@ -14,7 +14,7 @@ const MESSAGE_AWARENESS = 1;
 
 export const yjsHandler: FastifyPluginAsync = async (app) => {
   const { db, sql } = createDbClient(app.config.DATABASE_URL);
-  const docManager = new DocumentManager(db);
+  const docManager = new DocumentManager(db, app.log);
 
   app.addHook("onClose", async () => {
     await docManager.persistAll();
@@ -28,6 +28,10 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
       const { pasteId } = request.params as { pasteId: string };
 
       if (!NANOID_PATTERN.test(pasteId)) {
+        request.log.warn(
+          { event: "ws.rejected", pasteId, reason: "invalid_id" },
+          "WebSocket rejected: invalid paste ID",
+        );
         socket.close(4400, "Invalid paste ID");
         return;
       }
@@ -36,12 +40,23 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
       try {
         docEntry = await docManager.getOrCreateDoc(pasteId);
       } catch {
+        request.log.warn(
+          { event: "ws.rejected", pasteId, reason: "not_found" },
+          "WebSocket rejected: paste not found",
+        );
         socket.close(4404, "Paste not found");
         return;
       }
 
       const { doc, awareness } = docEntry;
-      docManager.addConnection(pasteId, socket as unknown as WebSocket);
+      const connectionCount = docManager.addConnection(
+        pasteId,
+        socket as unknown as WebSocket,
+      );
+      request.log.info(
+        { event: "ws.connected", pasteId, connections: connectionCount },
+        "WebSocket connected",
+      );
 
       // Send sync step 1 to the connecting client
       const encoder = encoding.createEncoder();
@@ -146,7 +161,14 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
           [doc.clientID],
           null,
         );
-        docManager.removeConnection(pasteId, socket as unknown as WebSocket);
+        const remaining = docManager.removeConnection(
+          pasteId,
+          socket as unknown as WebSocket,
+        );
+        request.log.info(
+          { event: "ws.disconnected", pasteId, connections: remaining },
+          "WebSocket disconnected",
+        );
       });
     },
   );

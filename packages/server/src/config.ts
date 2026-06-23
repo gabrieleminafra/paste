@@ -23,6 +23,15 @@ export const envSchema: FastifyEnvOptions = {
         default: "development",
         enum: ["development", "production", "test"],
       },
+      UPLOAD_DIR: {
+        type: "string",
+        default: path.resolve(__dirname, "../../../uploads"),
+      },
+      LOG_LEVEL: {
+        type: "string",
+        default: "info",
+        enum: ["fatal", "error", "warn", "info", "debug", "trace", "silent"],
+      },
     },
   },
 };
@@ -33,6 +42,8 @@ declare module "fastify" {
       DATABASE_URL: string;
       PORT: number;
       NODE_ENV: string;
+      UPLOAD_DIR: string;
+      LOG_LEVEL: string;
     };
   }
 }

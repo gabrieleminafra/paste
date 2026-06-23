@@ -1,3 +1,5 @@
+name: pastebin
+
 services:
   migrate:
     build:
@@ -19,6 +21,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-pastebin}:${POSTGRES_PASSWORD:-pastebin}@postgres:5432/${POSTGRES_DB:-pastebin}
       PORT: "3000"
       NODE_ENV: production
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -41,3 +46,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

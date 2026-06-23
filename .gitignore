@@ -3,6 +3,9 @@ dist
 .env
 *.tsbuildinfo
 
+# Local file uploads
+uploads
+
 
 # IDE
 .vscode

@@ -42,6 +42,10 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
       const contentBytes = Buffer.from(content, "utf-8");
 
       if (contentBytes.length > MAX_CONTENT_SIZE) {
+        request.log.warn(
+          { event: "paste.rejected", reason: "too_large", size: contentBytes.length },
+          "Paste rejected: content exceeds 1MB limit",
+        );
         const response: ApiResponse<never> = {
           data: null,
           error: {
@@ -64,6 +68,11 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
         id,
         content: Buffer.from(yState),
       });
+
+      request.log.info(
+        { event: "paste.created", pasteId: id, size: contentBytes.length },
+        "Paste created",
+      );
 
       const response: ApiResponse<{ id: string }> = {
         data: { id },
@@ -114,6 +123,8 @@ export const pasteRoutes: FastifyPluginAsync = async (app) => {
       const doc = loadYjsDoc(paste.content);
       const textContent = doc.getText("content").toString();
       doc.destroy();
+
+      request.log.debug({ event: "paste.viewed", pasteId: id }, "Paste viewed");
 
       const response: ApiResponse<{
         id: string;

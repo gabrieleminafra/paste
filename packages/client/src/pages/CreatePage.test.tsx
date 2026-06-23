@@ -32,7 +32,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByPlaceholderText('Paste your text here...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Paste your text here/)).toBeInTheDocument()
   })
 
   it('renders Create button disabled when textarea is empty', () => {
@@ -52,7 +52,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Hello world' },
     })
 
@@ -66,7 +66,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: '   ' },
     })
 
@@ -86,7 +86,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Test content' },
     })
 
@@ -122,7 +122,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Test content' },
     })
 
@@ -153,7 +153,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Retry content' },
     })
 
@@ -184,7 +184,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Test content' },
     })
 
@@ -209,7 +209,7 @@ describe('CreatePage', () => {
       expect(main?.className).toContain('justify-center')
       expect(main?.className).toContain('px-6')
 
-      const innerDiv = screen.getByPlaceholderText('Paste your text here...').closest('.max-w-2xl')
+      const innerDiv = screen.getByPlaceholderText(/Paste your text here/).closest('.max-w-2xl')
       expect(innerDiv).toBeInTheDocument()
     })
 
@@ -243,7 +243,7 @@ describe('CreatePage', () => {
         </MemoryRouter>,
       )
 
-      const textarea = screen.getByPlaceholderText('Paste your text here...')
+      const textarea = screen.getByPlaceholderText(/Paste your text here/)
       expect(textarea.className).toContain('max-md:min-h-[240px]')
     })
   })
@@ -275,6 +275,42 @@ describe('CreatePage', () => {
     })
   })
 
+  describe('file upload', () => {
+    it('offers a file-upload affordance when the textarea is empty', () => {
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      expect(
+        screen.getByRole('button', { name: 'choose a file' }),
+      ).toBeInTheDocument()
+    })
+
+    it('rejects a file larger than 50MB without uploading', () => {
+      const mockFetch = vi.fn()
+      vi.stubGlobal('fetch', mockFetch)
+
+      render(
+        <MemoryRouter>
+          <CreatePage />
+        </MemoryRouter>,
+      )
+
+      const input = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement
+      const bigFile = new File(['x'], 'big.bin')
+      Object.defineProperty(bigFile, 'size', { value: 52_428_801 })
+
+      fireEvent.change(input, { target: { files: [bigFile] } })
+
+      expect(screen.getByText('File exceeds 50MB limit')).toBeInTheDocument()
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+  })
+
   it('triggers create on Cmd/Ctrl+Enter', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -288,7 +324,7 @@ describe('CreatePage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('Paste your text here...'), {
+    fireEvent.change(screen.getByPlaceholderText(/Paste your text here/), {
       target: { value: 'Keyboard shortcut test' },
     })
 

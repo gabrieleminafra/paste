@@ -26,6 +26,10 @@ RUN npm ci --omit=dev
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/packages/server/dist packages/server/dist
 COPY --from=build /app/packages/client/dist packages/client/dist
+# Upload directory; the named volume mounted here inherits this ownership so
+# the unprivileged app user can write to it.
+RUN mkdir -p /data/uploads && chown -R app:app /data
+ENV UPLOAD_DIR=/data/uploads
 USER app
 EXPOSE 3000
 CMD ["node", "packages/server/dist/index.js"]
