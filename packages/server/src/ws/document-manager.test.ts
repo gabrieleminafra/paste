@@ -194,6 +194,21 @@ describe("DocumentManager", () => {
     expect(connections!.size).toBe(1);
   });
 
+  it("returns the live connection count from add/removeConnection", async () => {
+    const dbWithCounts = createMockDb([
+      { id: "paste-count", content: new Uint8Array(0) },
+    ]);
+    const mgr = new DocumentManager(dbWithCounts as never);
+    await mgr.getOrCreateDoc("paste-count");
+    const ws1 = {} as WebSocket;
+    const ws2 = {} as WebSocket;
+
+    expect(mgr.addConnection("paste-count", ws1)).toBe(1);
+    expect(mgr.addConnection("paste-count", ws2)).toBe(2);
+    expect(mgr.removeConnection("paste-count", ws2)).toBe(1);
+    expect(mgr.removeConnection("paste-count", ws1)).toBe(0);
+  });
+
   it("persists to PostgreSQL and cleans in-memory doc when last connection closes", async () => {
     const sourceDoc = new Y.Doc();
     sourceDoc.getText("content").insert(0, "persist on disconnect");

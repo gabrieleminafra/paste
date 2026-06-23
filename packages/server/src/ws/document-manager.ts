@@ -1,9 +1,16 @@
 import * as Y from "yjs";
 import * as awarenessProtocol from "y-protocols/awareness";
 import { eq } from "drizzle-orm";
+import type { FastifyBaseLogger } from "fastify";
 import type { Database } from "../db/client.js";
 import { pastes } from "../db/schema.js";
 import { loadYjsDoc } from "./yjs-utils.js";
+
+// A no-op logger so the manager can be constructed without one in tests.
+const noopLogger = {
+  debug() {},
+  error() {},
+} as unknown as FastifyBaseLogger;
 
 interface DocEntry {
   doc: Y.Doc;
@@ -17,7 +24,10 @@ export class DocumentManager {
   private pending = new Map<string, Promise<{ doc: Y.Doc; awareness: awarenessProtocol.Awareness }>>();
   private PERSIST_DEBOUNCE_MS = 5000;
 
-  constructor(private db: Database) {}
+  constructor(
+    private db: Database,
+    private log: FastifyBaseLogger = noopLogger,
+  ) {}
 
   async getOrCreateDoc(
     pasteId: string,
@@ -75,35 +85,38 @@ export class DocumentManager {
     return { doc, awareness };
   }
 
-  addConnection(pasteId: string, ws: WebSocket): void {
+  /** Adds a connection and returns the live connection count for the doc. */
+  addConnection(pasteId: string, ws: WebSocket): number {
     const entry = this.docs.get(pasteId);
-    if (entry) {
-      entry.connections.add(ws);
-    }
+    if (!entry) return 0;
+    entry.connections.add(ws);
+    return entry.connections.size;
   }
 
-  removeConnection(pasteId: string, ws: WebSocket): void {
+  /** Removes a connection and returns the remaining connection count. */
+  removeConnection(pasteId: string, ws: WebSocket): number {
     const entry = this.docs.get(pasteId);
-    if (!entry) return;
+    if (!entry) return 0;
 
     entry.connections.delete(ws);
+    const remaining = entry.connections.size;
 
-    if (entry.connections.size === 0) {
+    if (remaining === 0) {
       // Last connection — persist immediately and clean up
       if (entry.saveTimeout) {
         clearTimeout(entry.saveTimeout);
         entry.saveTimeout = null;
       }
-      this.persistDoc(pasteId)
-        .catch(() => {
-          // Persist failed — still clean up to avoid memory leak
-        })
-        .finally(() => {
-          entry.awareness.destroy();
-          entry.doc.destroy();
-          this.docs.delete(pasteId);
-        });
+      // persistDoc logs its own failures; still clean up either way to avoid
+      // leaking the in-memory doc.
+      this.persistDoc(pasteId).finally(() => {
+        entry.awareness.destroy();
+        entry.doc.destroy();
+        this.docs.delete(pasteId);
+      });
     }
+
+    return remaining;
   }
 
   getConnections(pasteId: string): Set<WebSocket> | undefined {
@@ -129,10 +142,21 @@ export class DocumentManager {
     if (!entry) return;
 
     const content = Buffer.from(Y.encodeStateAsUpdate(entry.doc));
-    await this.db
-      .update(pastes)
-      .set({ content, updatedAt: new Date() })
-      .where(eq(pastes.id, pasteId));
+    try {
+      await this.db
+        .update(pastes)
+        .set({ content, updatedAt: new Date() })
+        .where(eq(pastes.id, pasteId));
+      this.log.debug(
+        { event: "doc.persisted", pasteId, bytes: content.length },
+        "Document persisted",
+      );
+    } catch (err) {
+      this.log.error(
+        { event: "doc.persist_failed", pasteId, err },
+        "Failed to persist document",
+      );
+    }
   }
 
   async persistAll(): Promise<void> {
