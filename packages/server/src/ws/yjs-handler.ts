@@ -80,51 +80,10 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
       encoding.writeVarUint8Array(awarenessEncoder, awarenessStates);
       socket.send(encoding.toUint8Array(awarenessEncoder));
 
-      // Handle awareness updates — broadcast to other clients
-      const awarenessChangeHandler = (
-        { added, updated, removed }: { added: number[]; updated: number[]; removed: number[] },
-        origin: unknown,
-      ) => {
-        const changedClients = added.concat(updated, removed);
-        if (changedClients.length > 0) {
-          const encoderA = encoding.createEncoder();
-          encoding.writeVarUint(encoderA, MESSAGE_AWARENESS);
-          encoding.writeVarUint8Array(
-            encoderA,
-            awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients),
-          );
-          const message = encoding.toUint8Array(encoderA);
-          const connections = docManager.getConnections(pasteId);
-          if (connections) {
-            for (const conn of connections) {
-              const wsConn = conn as unknown as WsWebSocket;
-              if (wsConn !== socket && wsConn.readyState === 1) {
-                wsConn.send(message);
-              }
-            }
-          }
-        }
-      };
-      awareness.on("change", awarenessChangeHandler);
-
-      // Handle doc updates — broadcast to other clients
-      const updateHandler = (update: Uint8Array, origin: unknown) => {
-        const updateEncoder = encoding.createEncoder();
-        encoding.writeVarUint(updateEncoder, MESSAGE_SYNC);
-        syncProtocol.writeUpdate(updateEncoder, update);
-        const message = encoding.toUint8Array(updateEncoder);
-
-        const connections = docManager.getConnections(pasteId);
-        if (connections) {
-          for (const conn of connections) {
-            const wsConn = conn as unknown as WsWebSocket;
-            if (wsConn !== socket && wsConn.readyState === 1) {
-              wsConn.send(message);
-            }
-          }
-        }
-      };
-      doc.on("update", updateHandler);
+      // Doc-update and awareness broadcasts are registered once per doc inside
+      // DocumentManager (see loadDoc), not per connection — that keeps fan-out
+      // O(N) instead of O(N^2). Here we just pass `socket` as the Yjs
+      // transaction origin so the manager can skip the originating client.
 
       socket.on("message", (data: ArrayBuffer | Buffer) => {
         try {
@@ -137,7 +96,14 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
           if (messageType === MESSAGE_SYNC) {
             const responseEncoder = encoding.createEncoder();
             encoding.writeVarUint(responseEncoder, MESSAGE_SYNC);
-            syncProtocol.readSyncMessage(decoder, responseEncoder, doc, null);
+            // Pass `socket` as the transaction origin so the doc-update
+            // broadcaster skips this client (it already has the change).
+            syncProtocol.readSyncMessage(
+              decoder,
+              responseEncoder,
+              doc,
+              socket as unknown as WebSocket,
+            );
             if (encoding.length(responseEncoder) > 1) {
               socket.send(encoding.toUint8Array(responseEncoder));
             }
@@ -154,8 +120,10 @@ export const yjsHandler: FastifyPluginAsync = async (app) => {
       });
 
       socket.on("close", () => {
-        doc.off("update", updateHandler);
-        awareness.off("change", awarenessChangeHandler);
+        // The doc/awareness broadcast handlers live on the doc itself and are
+        // torn down when the last connection leaves (doc.destroy in
+        // DocumentManager.removeConnection), so there's nothing per-connection
+        // to unregister here.
         awarenessProtocol.removeAwarenessStates(
           awareness,
           [doc.clientID],

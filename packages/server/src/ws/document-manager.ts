@@ -1,10 +1,15 @@
 import * as Y from "yjs";
 import * as awarenessProtocol from "y-protocols/awareness";
+import * as syncProtocol from "y-protocols/sync";
+import * as encoding from "lib0/encoding";
 import { eq } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import type { Database } from "../db/client.js";
 import { pastes } from "../db/schema.js";
 import { loadYjsDoc } from "./yjs-utils.js";
+
+const MESSAGE_SYNC = 0;
+const MESSAGE_AWARENESS = 1;
 
 // A no-op logger so the manager can be constructed without one in tests.
 const noopLogger = {
@@ -82,7 +87,52 @@ export class DocumentManager {
 
     doc.on("update", () => this.schedulePersist(pasteId));
 
+    // Broadcast doc updates to every connection except the one that produced
+    // them. Registered ONCE per doc — not per connection — so a single edit
+    // fans out O(N) times, not O(N^2). The originating socket is passed as the
+    // Yjs transaction origin (see yjs-handler) so we can skip it here; it has
+    // already applied the change locally.
+    doc.on("update", (update: Uint8Array, origin: unknown) => {
+      const enc = encoding.createEncoder();
+      encoding.writeVarUint(enc, MESSAGE_SYNC);
+      syncProtocol.writeUpdate(enc, update);
+      this.broadcast(entry, encoding.toUint8Array(enc), origin);
+    });
+
+    awareness.on(
+      "change",
+      (
+        {
+          added,
+          updated,
+          removed,
+        }: { added: number[]; updated: number[]; removed: number[] },
+        origin: unknown,
+      ) => {
+        const changed = added.concat(updated, removed);
+        if (changed.length === 0) return;
+        const enc = encoding.createEncoder();
+        encoding.writeVarUint(enc, MESSAGE_AWARENESS);
+        encoding.writeVarUint8Array(
+          enc,
+          awarenessProtocol.encodeAwarenessUpdate(awareness, changed),
+        );
+        this.broadcast(entry, encoding.toUint8Array(enc), origin);
+      },
+    );
+
     return { doc, awareness };
+  }
+
+  /** Sends a binary message to every live connection except `origin`. */
+  private broadcast(entry: DocEntry, message: Uint8Array, origin: unknown): void {
+    for (const conn of entry.connections) {
+      if (conn === origin) continue;
+      // readyState 1 === OPEN
+      if ((conn as { readyState: number }).readyState === 1) {
+        (conn as { send: (data: Uint8Array) => void }).send(message);
+      }
+    }
   }
 
   /** Adds a connection and returns the live connection count for the doc. */
